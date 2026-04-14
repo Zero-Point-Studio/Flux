@@ -85,8 +85,8 @@ namespace Flux {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         glm::mat4 modelMatrix = glm::mat4(1.0f);
-        modelMatrix = glm::scale(modelMatrix, glm::vec3(5.0f));
-        modelMatrix = glm::rotate(modelMatrix, time, glm::vec3(0.0f, 1.0f, 0.0f));
+        modelMatrix = glm::scale(modelMatrix, glm::vec3(1.0f)); //MODEL SCALE
+        //modelMatrix = glm::rotate(modelMatrix, time, glm::vec3(0.0f, 1.0f, 0.0f));
 
         glm::vec3 cameraPos = glm::vec3(0, 5, 15);
 

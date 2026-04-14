@@ -29,6 +29,7 @@
 #include "../engine/OpenGLManager.h"
 #include "../engine/3DRenderer.h"
 #include "../engine/Model.h"
+#include "../engine/mechanics/camera.h"
 
 extern float vertices[];
 
@@ -52,5 +53,6 @@ namespace Flux {
 		std::unique_ptr<OpenGLManager> glManager;
 		std::unique_ptr<Renderer3D> renderer;
 		std::unique_ptr<Model> currentModel;
+		std::unique_ptr<Camera> camera;
 	};
 }

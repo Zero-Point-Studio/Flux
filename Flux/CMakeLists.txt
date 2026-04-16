@@ -17,7 +17,7 @@ add_executable (Flux
 	"engine/gui/viewport/properties.cpp" 
 	"engine/Model.h" 
 	"engine/3DRenderer.h"
- "engine/OpenGLManager.cpp" "engine/3DRenderer.cpp" "engine/Model.cpp")
+ "engine/OpenGLManager.cpp" "engine/3DRenderer.cpp" "engine/Model.cpp" "engine/mechanics/camera.h" )
 
 if(WIN32)
     set_target_properties(Flux PROPERTIES 
@@ -31,6 +31,7 @@ find_package(glm CONFIG REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(glad CONFIG REQUIRED)
 find_package(assimp CONFIG REQUIRED)
+find_package(imguizmo CONFIG REQUIRED)
 
 file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/assets" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
 
@@ -52,11 +53,13 @@ target_link_libraries(Flux
 	dwmapi
 	glad::glad
 	assimp::assimp
+	imguizmo::imguizmo
 )
 
 target_include_directories(Flux PRIVATE 
     "engine"
     "engine/gui/viewport"
+	"assets"
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
 

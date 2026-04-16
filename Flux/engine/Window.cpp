@@ -136,16 +136,18 @@ namespace Flux {
 			ImGuiID dock_id_left;
 			ImGuiID dock_id_right;
 			ImGuiID dock_id_bottom;
+			ImGuiID dock_id_bottomRight;
 			ImGuiID dock_id_center = dockspace_id;
 
 			dock_id_left = ImGui::DockBuilderSplitNode(dock_id_center, ImGuiDir_Left, 0.2f, nullptr, &dock_id_center);
 			dock_id_bottom = ImGui::DockBuilderSplitNode(dock_id_center, ImGuiDir_Down, 0.25f, nullptr, &dock_id_center);
 			dock_id_right = ImGui::DockBuilderSplitNode(dock_id_center, ImGuiDir_Right, 0.25f, nullptr, &dock_id_center);
+			dock_id_bottomRight = ImGui::DockBuilderSplitNode(dock_id_right, ImGuiDir_Down, 0.5f, nullptr, &dock_id_right);
 
 			ImGui::DockBuilderDockWindow("Viewport", dock_id_center);
-			ImGui::DockBuilderDockWindow("Explorer", dock_id_left);
+			ImGui::DockBuilderDockWindow("Explorer", dock_id_right);
 			ImGui::DockBuilderDockWindow("Output", dock_id_bottom);
-			ImGui::DockBuilderDockWindow("Properties", dock_id_right);
+			ImGui::DockBuilderDockWindow("Properties", dock_id_bottomRight);
 
 			ImGui::DockBuilderFinish(dockspace_id);
 		}

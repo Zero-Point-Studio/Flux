@@ -44,7 +44,7 @@ namespace Flux {
 		void Init();
 		void RenderViewport();
 
-		std::string modelPath = "assets/sphere.obj";
+		std::string modelPath = "assets/models/sphere.obj";
 	private:
 		unsigned int fbo;
 		unsigned int textureColorBuffer;
@@ -56,5 +56,7 @@ namespace Flux {
 		std::unique_ptr<Renderer3D> renderer;
 		std::unique_ptr<Model> currentModel;
 		std::unique_ptr<Camera> camera;
+		std::vector<std::unique_ptr<Model>> models;
+		int selectedModelIndex = -1;
 	};
 }

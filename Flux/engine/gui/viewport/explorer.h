@@ -38,8 +38,8 @@ namespace Flux {
 	class Explorer {
 		public:
 			void renderExplorer(Viewport& viewport);
-			void renderContentBrowser();
 
+			std::filesystem::path activeFolderPath;
 			virtualFile projectRoot = {"Project", fileType::Folder};
 		private:
 			void DrawVirtualNodes(virtualFile& file);

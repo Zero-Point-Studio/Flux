@@ -41,35 +41,32 @@ namespace Flux {
 		}
 
 		if (ImGui::BeginPopup("ContextMenuExplorer")) {
-			if (ImGui::BeginMenu("Add..")) {
-				if (ImGui::MenuItem("Add Folder")) {
-					projectRoot.children.push_back({ "New Folder", fileType::Folder });
-				}
-				if (ImGui::MenuItem("Add Script")) {
-					projectRoot.children.push_back({ "New Script", fileType::Script });
-				}
-				if (ImGui::MenuItem("Add Text")) {
-					projectRoot.children.push_back({ "New Text", fileType::Text });
-				}
-				if (ImGui::MenuItem("Add Model")) {
-					projectRoot.children.push_back({ "New Model", fileType::Model });
+			if (ImGui::BeginMenu("Create a new Project"))
+			{
+				char* usrProfile = std::getenv("USERPROFILE");
+				std::filesystem::path docsPath = std::filesystem::path(usrProfile) / "Documents" / "FluxProjects" / "NewGame";
+
+				std::filesystem::path projTemplatePath = std::filesystem::current_path() / "templates" / "base_game_folder";
+
+				try
+				{
+					if (!std::filesystem::exists(docsPath))
+					{
+						std::filesystem::create_directories(docsPath);
+						std::filesystem::create_directories(projTemplatePath);
+						std::filesystem::copy(projTemplatePath, docsPath, std::filesystem::copy_options::recursive);
+
+						this->activeFolderPath = docsPath;
+						std::cout << "Successfully created at " << docsPath << std::endl;
+					}
+				} catch (const std::filesystem::filesystem_error& e) {
+					std::cerr << "Failed to copy template: " << e.what() << std::endl;
 				}
 
 				ImGui::EndMenu();
 			}
+
 			ImGui::EndPopup();
-		}
-
-		ImGui::End();
-	}
-
-	void Explorer::renderContentBrowser() {
-		ImGui::Begin("Content Browser");
-
-		DrawVirtualNodes(projectRoot);
-
-		if (ImGui::Button("Add Folder")) {
-			projectRoot.children.push_back({ "New Folder", fileType::Folder });
 		}
 
 		ImGui::End();

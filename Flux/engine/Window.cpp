@@ -154,7 +154,7 @@ namespace Flux {
 		ImGui::End();
 
 		m_viewport.RenderViewport();
-		m_explorer.renderExplorer();
+		m_explorer.renderExplorer(m_viewport);
 		m_ribbon.renderRibbon();
 		m_output.renderOutput();
 		m_properties.renderProperties();

@@ -34,6 +34,8 @@ find_package(assimp CONFIG REQUIRED)
 find_package(imguizmo CONFIG REQUIRED)
 
 file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/assets" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
+file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/templates"
+		DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET Flux PROPERTY CXX_STANDARD 20)
@@ -43,6 +45,7 @@ endif()
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
+
 
 target_link_libraries(Flux 
 	PRIVATE 

@@ -19,10 +19,30 @@
 #pragma once
 
 #include "imgui.h"
+#include "viewport.h"
+#include <filesystem>
+#include <vector>
+#include <string>
 
 namespace Flux {
+	enum class fileType { Folder, Script, Text, Model };
+
+	struct virtualFile
+	{
+		std::string name;
+		fileType type;
+		std::vector<virtualFile> children;
+	};
+	class Viewport;
+
 	class Explorer {
 		public:
-			void renderExplorer();
+			void renderExplorer(Viewport& viewport);
+
+			std::filesystem::path activeFolderPath;
+			virtualFile projectRoot = {"Project", fileType::Folder};
+		private:
+			void DrawVirtualNodes(virtualFile& file);
+
 	};
 }

@@ -91,7 +91,7 @@ namespace Flux {
         glDeleteShader(fragment);
     }
 
-    void Renderer3D::DrawScene(Model& model, glm::mat4 view, glm::mat4 proj, float time) {
+    void Renderer3D::DrawScene(Model& model, glm::mat4 modelMatrix, glm::mat4 view, glm::mat4 proj, float time) {
         glUseProgram(shaderProgram);
 
         glEnable(GL_DEPTH_TEST);
@@ -99,10 +99,6 @@ namespace Flux {
 		glCullFace(GL_BACK);
 		glFrontFace(GL_CCW);
 
-        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        glm::mat4 modelMatrix = model.GetTransformMatrix();
 
         glm::vec3 cameraPos = glm::vec3(0, 5, 15);
 

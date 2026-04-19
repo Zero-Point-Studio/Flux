@@ -29,6 +29,14 @@ namespace Flux {
 	extern int currentTool;
 	extern bool showSettings;
 
+	std::shared_ptr<Model> Viewport::GetOrLoadModel(const std::string& path) {
+		if (modelRegistry.find(path) == modelRegistry.end()) {
+			// We don't have it yet, so we load it
+			modelRegistry[path] = std::make_shared<Model>(path);
+		}
+		return modelRegistry[path]; // Return the shared pointer
+	}
+
 	void Viewport::Init() {
 		glManager = std::make_unique<OpenGLManager>();
 		renderer = std::make_unique<Renderer3D>();
@@ -37,8 +45,11 @@ namespace Flux {
 		glManager->Init(1280, 720);
 		renderer->Init();
 
-		models.push_back(std::make_unique<Model>(modelPath));
-		selectedModelIndex = 0;
+		GameObject defaultCube;
+		defaultCube.name = "Cube 1";
+		defaultCube.modelBlueprint = GetOrLoadModel("assets/models/cube.obj");
+		sceneObjects.push_back(defaultCube);
+		selectedObjectIndex = 0;
 	}
 
 	void Viewport::RenderViewport() {
@@ -52,6 +63,9 @@ namespace Flux {
 		}
 
 		ImGui::Begin("Viewport", nullptr, ImGuiWindowFlags_NoScrollbar);
+		if (ImGui::IsWindowHovered()) {
+			ImGui::SetWindowFocus();
+		}
 		ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
 
 		ImVec2 size = ImGui::GetContentRegionAvail();
@@ -74,9 +88,16 @@ namespace Flux {
 		glManager->Resize((int)size.x, (int)size.y);
 		glManager->Bind();
 		glViewport(0, 0, (int)size.x, (int)size.y);
-		for (int i = 0; i < models.size(); i++) {
-			renderer->DrawScene(*models[i], view, proj, (float)ImGui::GetTime());
+		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		for (auto& object : sceneObjects) {
+			if (object.modelBlueprint) {
+				glm::mat4 transform = object.GetTransformMatrix();
+
+				renderer->DrawScene(*object.modelBlueprint, transform, view, proj, 0.0f);
+			}
 		}
+
 		glManager->Unbind();
 
 		ImVec2 imagePos = ImGui::GetCursorScreenPos();
@@ -92,10 +113,11 @@ namespace Flux {
 		if (currentTool == 1) currentOp = ImGuizmo::ROTATE;
 		if (currentTool == 2) currentOp = ImGuizmo::SCALE;
 
-		if (selectedModelIndex != -1 && selectedModelIndex < models.size()) {
-			auto& targetModel = models[selectedModelIndex];
+		if (selectedObjectIndex != -1 && selectedObjectIndex < sceneObjects.size()) {
+			auto& target = sceneObjects[selectedObjectIndex];
 
-			glm::mat4 modelMatrix = targetModel->GetTransformMatrix();
+			glm::mat4 modelMatrix = target.GetTransformMatrix();
+
 			ImGuizmo::Manipulate(glm::value_ptr(view), glm::value_ptr(proj),
 				currentOp, ImGuizmo::LOCAL, glm::value_ptr(modelMatrix));
 
@@ -103,9 +125,9 @@ namespace Flux {
 				float t[3], r[3], s[3];
 				ImGuizmo::DecomposeMatrixToComponents(glm::value_ptr(modelMatrix), t, r, s);
 
-				targetModel->position = glm::vec3(t[0], t[1], t[2]);
-				targetModel->rotation = glm::vec3(r[0], r[1], r[2]);
-				targetModel->scale = glm::vec3(s[0], s[1], s[2]);
+				target.position = glm::vec3(t[0], t[1], t[2]);
+				target.rotation = glm::vec3(r[0], r[1], r[2]);
+				target.scale = glm::vec3(s[0], s[1], s[2]);
 			}
 		}
 
@@ -118,19 +140,27 @@ namespace Flux {
 		if (ImGui::BeginPopup("ContextMenu")) {
 			if (ImGui::BeginMenu("Add Model")) {
 				if (ImGui::MenuItem("Add Cube")) {
-					models.push_back(std::make_unique<Model>("assets/models/cube.obj"));
-					selectedModelIndex = models.size() - 1;
+					GameObject newCube;
+					newCube.name = "Cube " + std::to_string(sceneObjects.size() + 1);
+					newCube.modelBlueprint = GetOrLoadModel("assets/models/cube.obj");
+					sceneObjects.push_back(newCube);
+					selectedObjectIndex = sceneObjects.size() - 1;
 				}
 
 				if (ImGui::MenuItem("Add Sphere")) {
-					models.push_back(std::make_unique<Model>("assets/models/sphere.obj"));
-					selectedModelIndex = models.size() - 1;
+					GameObject newSphere;
+					newSphere.name = "Sphere " + std::to_string(sceneObjects.size() + 1);
+					newSphere.modelBlueprint = GetOrLoadModel("assets/models/sphere.obj");
+					sceneObjects.push_back(newSphere);
+					selectedObjectIndex = sceneObjects.size() - 1;
 				}
-				ImGui::EndMenu();
 
 				if (ImGui::MenuItem("Add Monkey")) {
-					models.push_back(std::make_unique<Model>("assets/models/monkey.obj"));
-					selectedModelIndex = models.size() - 1;
+					GameObject newMonkey;
+					newMonkey.name = "Monkey " + std::to_string(sceneObjects.size() + 1);
+					newMonkey.modelBlueprint = GetOrLoadModel("assets/models/monkey.obj");
+					sceneObjects.push_back(newMonkey);
+					selectedObjectIndex = sceneObjects.size() - 1;
 				}
 				ImGui::EndMenu();
 			}

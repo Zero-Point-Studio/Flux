@@ -36,6 +36,9 @@ namespace Flux {
 			| ImGuiWindowFlags_MenuBar;
 
 		ImGui::Begin("###Ribbon", nullptr, window_flags);
+		if (ImGui::IsWindowHovered()) {
+			ImGui::SetWindowFocus();
+		}
 
 		if (ImGui::BeginMenuBar()) {
 			drawFileMenu();
@@ -56,6 +59,8 @@ namespace Flux {
 
 
 	void Ribbon::drawTransformTools() {
+		if (ImGui::RadioButton("Select", currentTool == 3)) { currentTool = 3; }
+		ImGui::SameLine();
 		if (ImGui::RadioButton("Move", currentTool == 0)) { currentTool = 0; }
 		ImGui::SameLine();
 		if (ImGui::RadioButton("Rotate", currentTool == 1)) { currentTool = 1; }

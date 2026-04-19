@@ -35,7 +35,7 @@ namespace Flux {
         float Yaw;
         float Pitch;
 
-        float MovementSpeed = 2.5f;
+        float MovementSpeed = 10.0f;
         float MouseSensitivity = 0.25f;
 
         Camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 3.0f))

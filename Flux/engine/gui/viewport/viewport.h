@@ -30,6 +30,9 @@
 #include "../engine/3DRenderer.h"
 #include "../engine/Model.h"
 #include "../engine/mechanics/camera.h"
+#include "explorer.h"
+
+#include <unordered_map>
 
 extern float vertices[];
 
@@ -39,12 +42,32 @@ namespace Flux {
 	class Renderer3D;
 	class Model;
 
+	struct GameObject{
+		std::string name;
+		std::shared_ptr<Model> modelBlueprint;
+
+		glm::vec3 position = glm::vec3(0.0f);
+		glm::vec3 rotation = glm::vec3(0.0f);
+		glm::vec3 scale = glm::vec3(1.0f);
+
+		glm::mat4 GetTransformMatrix() {
+			float matrix[16];
+			float t[3] = { position.x, position.y, position.z };
+			float r[3] = { rotation.x, rotation.y, rotation.z };
+			float s[3] = { scale.x, scale.y, scale.z };
+			ImGuizmo::RecomposeMatrixFromComponents(t, r, s, matrix);
+			return glm::make_mat4(matrix);
+		}
+	};
+
 	class Viewport {
 	public:
 		void Init();
 		void RenderViewport();
 
-		std::string modelPath = "assets/models/sphere.obj";
+		std::vector<GameObject> sceneObjects;
+		int selectedObjectIndex = -1;
+
 	private:
 		unsigned int fbo;
 		unsigned int textureColorBuffer;
@@ -56,7 +79,7 @@ namespace Flux {
 		std::unique_ptr<Renderer3D> renderer;
 		std::unique_ptr<Model> currentModel;
 		std::unique_ptr<Camera> camera;
-		std::vector<std::unique_ptr<Model>> models;
-		int selectedModelIndex = -1;
+		std::unordered_map<std::string, std::shared_ptr<Model>> modelRegistry;
+		std::shared_ptr<Model> GetOrLoadModel(const std::string& path);
 	};
 }

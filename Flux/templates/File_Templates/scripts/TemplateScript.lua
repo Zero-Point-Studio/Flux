@@ -1,12 +1,8 @@
--- Starter Game Logic
-
 local Message = "Hello World!"
 
 local function OnStart()
+    -- This runs at the start of the game, you can use this for setting things up!
     print(Message)
-
-    local Cube = Scene.AddCube("StarterCube")
-    Cube.position = {x = 0, y = 5, z = 0}
 end
 
 local function onUpdate(deltaTime)

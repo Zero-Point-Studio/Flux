@@ -30,11 +30,12 @@ Here are the main libraries that Flux depends on:
 - [stb_image](https://github.com/nothings/stb) - A library for loading
 - [ImGuizmo](https://github.com/cedricguillemet/imguizmo) - A library for manipulating objects in the viewport (especially for transformation)
 
-## License
-Flux is licensed under the GNU General Public License v3.0 (GPL-3.0). See [LICENSE](LICENSE.txt) for more details.
-
-## Contributors
+## Top Contributors
 
 Small party, I know ;-;
 
 - [@Idkthisguy](https://github.com/Idkthisguy) - Creator and lead developer (also is [Zero Point Studio](https://github.com/Zero-Point-Studio))
+- [@ivagaguaig-source](https://github.com/ivagaguaig-source) - Graphics, Design & Testing
+
+## License
+Flux is licensed under the GNU General Public License v3.0 (GPL-3.0). See [LICENSE](LICENSE.txt) for more details.

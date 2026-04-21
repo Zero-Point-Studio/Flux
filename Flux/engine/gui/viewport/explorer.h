@@ -21,6 +21,7 @@
 #include "imgui.h"
 #include "viewport.h"
 #include <filesystem>
+#include <fstream>
 #include <vector>
 #include <string>
 
@@ -31,7 +32,15 @@ namespace Flux {
 	{
 		std::string name;
 		fileType type;
+		std::filesystem::path path;
 		std::vector<virtualFile> children;
+	};
+
+	struct creationTask
+	{
+		std::string defaultName;
+		std::string extension;
+		bool pending = false;
 	};
 	class Viewport;
 
@@ -39,10 +48,16 @@ namespace Flux {
 		public:
 			void renderExplorer(Viewport& viewport);
 
+			bool refreshRequested = false;
+			std::filesystem::path refreshPath;
 			std::filesystem::path activeFolderPath;
 			virtualFile projectRoot = {"Project", fileType::Folder};
+			creationTask pendingCreationTask;
+			std::filesystem::path pathToDelete = "";
 		private:
 			void DrawVirtualNodes(virtualFile& file);
-
-	};
+			void syncFiles(const  std::filesystem::path& path, virtualFile& node);
+			void copyTemplateItem(const std::string& folderType, const std::string& templateName, const std::string& targetBaseName, const std::string& ext);
+			void createNewFolder(const std::string& name);
+;	};
 }

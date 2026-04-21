@@ -17,7 +17,7 @@ add_executable (Flux
 	"engine/gui/viewport/properties.cpp" 
 	"engine/Model.h" 
 	"engine/3DRenderer.h"
- "engine/OpenGLManager.cpp" "engine/3DRenderer.cpp" "engine/Model.cpp" "engine/mechanics/camera.h" )
+ "engine/OpenGLManager.cpp" "engine/3DRenderer.cpp" "engine/Model.cpp" "engine/mechanics/camera.h")
 
 if(WIN32)
     set_target_properties(Flux PROPERTIES 
@@ -35,6 +35,10 @@ find_package(imguizmo CONFIG REQUIRED)
 
 file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/assets" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
 file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/templates"
+		DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
+file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/templates/Project_Templates"
+		DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
+file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/templates/File_Templates"
 		DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)

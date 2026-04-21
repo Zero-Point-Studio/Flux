@@ -116,33 +116,6 @@ namespace Flux {
 		if (selectedObjectIndex != -1 && selectedObjectIndex < sceneObjects.size()) {
 			auto& target = sceneObjects[selectedObjectIndex];
 
-			ImGuizmo::OPERATION currentOp;
-			bool shouldDrawGizmo = true;
-
-			if (currentTool == TOOL_MOVE)        currentOp = ImGuizmo::TRANSLATE;
-			else if (currentTool == TOOL_ROTATE) currentOp = ImGuizmo::ROTATE;
-			else if (currentTool == TOOL_SCALE)  currentOp = ImGuizmo::SCALE;
-			else {
-				shouldDrawGizmo = false;
-			}
-
-			if (shouldDrawGizmo)
-			{
-				glm::mat4 modelMatrix = target.GetTransformMatrix();
-
-				ImGuizmo::Manipulate(glm::value_ptr(view), glm::value_ptr(proj),
-					currentOp, ImGuizmo::LOCAL, glm::value_ptr(modelMatrix));
-
-				if (ImGuizmo::IsUsing()) {
-					float t[3], r[3], s[3];
-					ImGuizmo::DecomposeMatrixToComponents(glm::value_ptr(modelMatrix), t, r, s);
-
-					target.position = glm::vec3(t[0], t[1], t[2]);
-					target.rotation = glm::vec3(r[0], r[1], r[2]);
-					target.scale = glm::vec3(s[0], s[1], s[2]);
-				}
-			}
-
 			glm::mat4 modelMatrix = target.GetTransformMatrix();
 
 			ImGuizmo::Manipulate(glm::value_ptr(view), glm::value_ptr(proj),

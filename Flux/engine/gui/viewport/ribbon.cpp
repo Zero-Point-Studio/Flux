@@ -59,13 +59,13 @@ namespace Flux {
 
 
 	void Ribbon::drawTransformTools() {
-		if (ImGui::RadioButton("Select", currentTool == TOOL_SELECT)) { currentTool = TOOL_SELECT; }
+		if (ImGui::RadioButton("Select", currentTool == 3)) { currentTool = 3; }
 		ImGui::SameLine();
-		if (ImGui::RadioButton("Move", currentTool == TOOL_MOVE)) { currentTool = TOOL_MOVE; }
+		if (ImGui::RadioButton("Move", currentTool == 0)) { currentTool = 0; }
 		ImGui::SameLine();
-		if (ImGui::RadioButton("Rotate", currentTool == TOOL_ROTATE)) { currentTool = TOOL_ROTATE; }
+		if (ImGui::RadioButton("Rotate", currentTool == 1)) { currentTool = 1; }
 		ImGui::SameLine();
-		if (ImGui::RadioButton("Scale", currentTool == TOOL_SCALE)) { currentTool = TOOL_SCALE; }
+		if (ImGui::RadioButton("Scale", currentTool == 2)) { currentTool = 2; }
 	}
 
 	void Ribbon::drawFileMenu() {

@@ -99,7 +99,7 @@ namespace Flux
 		ImGui::End();
 
 		if (refreshRequested) {
-			syncFiles(activeFolderPath, projectRoot);
+			syncFiles(projectRoot.path, projectRoot);
 			refreshRequested = false;
 		}
 
@@ -107,7 +107,7 @@ namespace Flux
 			try {
 				if (std::filesystem::exists(pathToDelete)) {
 					std::filesystem::remove_all(pathToDelete);
-					syncFiles(activeFolderPath, projectRoot);
+					syncFiles(projectRoot.path, projectRoot);
 				}
 			} catch (const std::filesystem::filesystem_error& e) {
 				std::cerr << "Executioner failed: " << e.what() << std::endl;
@@ -124,6 +124,7 @@ namespace Flux
 
 			if (ImGui::BeginPopupContextItem())
 			{
+				this->activeFolderPath = file.path;
 				if (ImGui::MenuItem("Delete Folder"))
 				{
 					this->pathToDelete = file.path;

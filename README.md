@@ -38,4 +38,4 @@ Small party, I know ;-;
 - [@ivagaguaig-source](https://github.com/ivagaguaig-source) - Graphics, Design & Testing
 
 ## License
-Flux is licensed under the GNU General Public License v3.0 (GPL-3.0). See [LICENSE](LICENSE.txt) for more details.
+Flux is licensed under the GNU General Public License v3.0 (GPL-3.0). See [LICENSE](LICENSE.txt) for more details. 

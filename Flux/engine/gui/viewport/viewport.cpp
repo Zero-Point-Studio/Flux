@@ -104,6 +104,24 @@ namespace Flux {
 
 		ImGui::Image((void*)(intptr_t)glManager->GetTexture(), size, ImVec2(0, 1), ImVec2(1, 0));
 
+		ImVec2 mouseInCanvas = ImVec2(ImGui::GetMousePos().x - imagePos.x, ImGui::GetMousePos().y - imagePos.y);
+
+		if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !ImGuizmo::IsOver()) {
+			HandleObjectSelection(mouseInCanvas, size, proj, view);
+		}
+
+		if (ImGui::BeginDragDropTarget()) {
+			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("MODEL_FILE")) {
+				const char* droppedPath = (const char*)payload->Data;
+
+				GameObject newObj;
+				newObj.name = "New Model";
+				newObj.modelBlueprint = GetOrLoadModel(droppedPath);
+				sceneObjects.push_back(newObj);
+			}
+			ImGui::EndDragDropTarget();
+		}
+
 		ImGuizmo::SetOrthographic(false);
 		ImGuizmo::SetDrawlist();
 
@@ -120,15 +138,6 @@ namespace Flux {
 
 			ImGuizmo::Manipulate(glm::value_ptr(view), glm::value_ptr(proj),
 				currentOp, ImGuizmo::LOCAL, glm::value_ptr(modelMatrix));
-
-			if (ImGuizmo::IsUsing()) {
-				float t[3], r[3], s[3];
-				ImGuizmo::DecomposeMatrixToComponents(glm::value_ptr(modelMatrix), t, r, s);
-
-				target.position = glm::vec3(t[0], t[1], t[2]);
-				target.rotation = glm::vec3(r[0], r[1], r[2]);
-				target.scale = glm::vec3(s[0], s[1], s[2]);
-			}
 		}
 
 		if (ImGui::IsWindowFocused() && ImGui::IsMouseReleased(ImGuiMouseButton_Right)) {
@@ -168,5 +177,40 @@ namespace Flux {
 		}
 
 		ImGui::End();
+	}
+
+	bool Viewport::CheckSphereHit(glm::vec3 rayOrigin, glm::vec3 rayDir, glm::vec3 objCenter, float radius) {
+		glm::vec3 oc = rayOrigin - objCenter;
+		float b = glm::dot(oc, rayDir);
+		float c = glm::dot(oc, oc) - radius * radius;
+		float h = b * b - c;
+		return h > 0.0f;
+	}
+
+	void Viewport::HandleObjectSelection(ImVec2 mousePos, ImVec2 imageSize, glm::mat4 proj, glm::mat4 view) {
+		float ndcX = (2.0f * mousePos.x) / imageSize.x - 1.0f;
+		float ndcY = 1.0f - (2.0f * mousePos.y) / imageSize.y;
+
+		glm::vec4 rayClip = glm::vec4(ndcX, ndcY, -1.0f, 1.0f);
+		glm::vec4 rayEye = glm::inverse(proj) * rayClip;
+		rayEye = glm::vec4(rayEye.x, rayEye.y, -1.0f, 0.0f);
+		glm::vec3 rayWorld = glm::normalize(glm::vec3(glm::inverse(view) * rayEye));
+		glm::vec3 rayOrigin = camera->Position;
+
+		int bestHitIndex = -1;
+		float closestDistance = 999999.0f;
+
+		for (int i = 0; i < sceneObjects.size(); i++) {
+			float objRadius = glm::length(sceneObjects[i].scale) * 0.75f;
+
+			if (CheckSphereHit(rayOrigin, rayWorld, sceneObjects[i].position, objRadius)) {
+				float dist = glm::distance(rayOrigin, sceneObjects[i].position);
+				if (dist < closestDistance) {
+					closestDistance = dist;
+					bestHitIndex = i;
+				}
+			}
+		}
+		selectedObjectIndex = bestHitIndex;
 	}
 }

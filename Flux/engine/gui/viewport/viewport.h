@@ -69,6 +69,9 @@ namespace Flux {
 		int selectedObjectIndex = -1;
 
 	private:
+		bool CheckSphereHit(glm::vec3 rayOrigin, glm::vec3 rayDir, glm::vec3 objCenter, float radius);
+		void HandleObjectSelection(ImVec2 mousePos, ImVec2 imageSize, glm::mat4 proj, glm::mat4 view);
+		
 		unsigned int fbo;
 		unsigned int textureColorBuffer;
 		unsigned int rbo;

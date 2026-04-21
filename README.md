@@ -1,5 +1,5 @@
 # Flux
-Flux is a versatile,  high-performance game engine for 3D (and soon 2D).
+Flux is a versatile, high-performance game engine for 3D (and soon 2D).
 
 ---
 

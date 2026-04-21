@@ -158,6 +158,15 @@ namespace Flux
 		} else {
 			ImGui::Selectable(uniqueID.c_str());
 
+			if (ImGui::BeginDragDropSource()) {
+				std::string payloadPath = file.path.string();
+
+				ImGui::SetDragDropPayload("MODEL_FILE", payloadPath.c_str(), payloadPath.size() + 1);
+
+				ImGui::Text("Dragging %s", file.name.c_str());
+				ImGui::EndDragDropSource();
+			}
+
 			if (ImGui::BeginPopupContextItem())
 			{
 				this->pathToDelete = file.path;

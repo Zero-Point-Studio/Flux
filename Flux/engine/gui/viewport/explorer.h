@@ -42,22 +42,39 @@ namespace Flux {
 		std::string extension;
 		bool pending = false;
 	};
+
 	class Viewport;
 
 	class Explorer {
-		public:
-			void renderExplorer(Viewport& viewport);
+	public:
+		void renderExplorer(Viewport& viewport);
 
-			bool refreshRequested = false;
-			std::filesystem::path refreshPath;
-			std::filesystem::path activeFolderPath;
-			virtualFile projectRoot = {"Project", fileType::Folder};
-			creationTask pendingCreationTask;
-			std::filesystem::path pathToDelete = "";
-		private:
-			void DrawVirtualNodes(virtualFile& file);
-			void syncFiles(const  std::filesystem::path& path, virtualFile& node);
-			void copyTemplateItem(const std::string& folderType, const std::string& templateName, const std::string& targetBaseName, const std::string& ext);
-			void createNewFolder(const std::string& name);
-;	};
+		bool refreshRequested = false;
+		std::filesystem::path refreshPath;
+		std::filesystem::path activeFolderPath;
+		virtualFile projectRoot = { "Project", fileType::Folder };
+		creationTask pendingCreationTask;
+		std::filesystem::path pathToDelete = "";
+
+	private:
+		void DrawVirtualNodes(virtualFile& file);
+		void syncFiles(const std::filesystem::path& path, virtualFile& node);
+		void copyTemplateItem(const std::string& folderType,
+		                      const std::string& templateName,
+		                      const std::string& targetBaseName,
+		                      const std::string& ext);
+		void createNewFolder(const std::string& name);
+
+		std::filesystem::path resolveUniqueName(
+		    const std::filesystem::path& parentDir,
+		    const std::string& baseStem,
+		    const std::string& ext) const;
+
+		virtualFile* renamingNode = nullptr;
+		char         renameBuffer[256] = {};
+
+		bool showNewProjectModal     = false;
+		char newProjectNameBuf[256]  = "NewGame";
+		std::filesystem::path pendingTemplateRoot;
+	};
 }

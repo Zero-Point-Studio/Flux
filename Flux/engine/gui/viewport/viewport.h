@@ -25,6 +25,7 @@
 #include <string>
 #include <memory>
 #include "imgui.h"
+#include <filesystem>
 
 #include "../engine/OpenGLManager.h"
 #include "../engine/3DRenderer.h"
@@ -67,6 +68,7 @@ namespace Flux {
 
 		std::vector<GameObject> sceneObjects;
 		int selectedObjectIndex = -1;
+		std::filesystem::path activeProjectPath;
 
 	private:
 		bool CheckSphereHit(glm::vec3 rayOrigin, glm::vec3 rayDir, glm::vec3 objCenter, float radius);

@@ -26,45 +26,35 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <vector>
 #include <string>
-#include "imgui.h"
-#include "ImGuizmo.h"
 
 namespace Flux {
+
     struct Vertex {
         glm::vec3 Position;
         glm::vec3 Normal;
+        glm::vec2 TexCoords;
     };
 
     struct Mesh {
-        unsigned int VAO;
-        unsigned int VBO;
-        unsigned int EBO;
-        unsigned int indexCount;
+        unsigned int VAO        = 0;
+        unsigned int VBO        = 0;
+        unsigned int EBO        = 0;
+        unsigned int indexCount = 0;
+        unsigned int textureID  = 0;
+        glm::vec3    matColor   = glm::vec3(0.8f, 0.4f, 0.1f);
+        bool         hasMtlColor = false;
     };
 
     class Model {
     public:
-        std::string path;
+        std::string       path;
         std::vector<Mesh> meshes;
-
-        glm::vec3 position = glm::vec3(0.0f);
-        glm::vec3 rotation = glm::vec3(0.0f);
-        glm::vec3 scale = glm::vec3(1.0f);
 
         Model(const std::string& modelPath) : path(modelPath) { Load(); }
 
         void Load();
-        void Draw();
-
-        glm::mat4 GetTransformMatrix() {
-            float matrix[16];
-            float t[3] = { position.x, position.y, position.z };
-            float r[3] = { rotation.x, rotation.y, rotation.z };
-            float s[3] = { scale.x, scale.y, scale.z };
-
-            ImGuizmo::RecomposeMatrixFromComponents(t, r, s, matrix);
-
-            return glm::make_mat4(matrix);
-        }
+        void Draw(float alphaOverride = 1.0f);
+        void SetTexture(unsigned int texID);
     };
+
 }

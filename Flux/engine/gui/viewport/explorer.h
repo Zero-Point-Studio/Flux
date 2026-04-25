@@ -16,6 +16,7 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+
 #pragma once
 
 #include "imgui.h"
@@ -26,7 +27,7 @@
 #include <string>
 
 namespace Flux {
-	enum class fileType { Folder, Script, Text, Model };
+	enum class fileType { Folder, Script, Text, Model, Texture };
 
 	struct virtualFile
 	{
@@ -60,15 +61,15 @@ namespace Flux {
 		void DrawVirtualNodes(virtualFile& file);
 		void syncFiles(const std::filesystem::path& path, virtualFile& node);
 		void copyTemplateItem(const std::string& folderType,
-		                      const std::string& templateName,
-		                      const std::string& targetBaseName,
-		                      const std::string& ext);
+							  const std::string& templateName,
+							  const std::string& targetBaseName,
+							  const std::string& ext);
 		void createNewFolder(const std::string& name);
 
 		std::filesystem::path resolveUniqueName(
-		    const std::filesystem::path& parentDir,
-		    const std::string& baseStem,
-		    const std::string& ext) const;
+			const std::filesystem::path& parentDir,
+			const std::string& baseStem,
+			const std::string& ext) const;
 
 		virtualFile* renamingNode = nullptr;
 		char         renameBuffer[256] = {};

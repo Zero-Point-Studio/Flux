@@ -386,6 +386,7 @@ namespace Flux
 				if      (ext == ".lua")                  child.type = fileType::Script;
 				else if (ext == ".txt")                  child.type = fileType::Text;
 				else if (ext == ".obj" || ext == ".fbx") child.type = fileType::Model;
+			else if (ext == ".png" || ext == ".jpg" || ext == ".jpeg" || ext == ".bmp" || ext == ".tga") child.type = fileType::Texture;
 				else                                     child.type = fileType::Text;
 			}
 			node.children.push_back(child);

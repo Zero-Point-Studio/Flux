@@ -17,13 +17,26 @@
 */
 
 #pragma once
-#include "imgui.h"
+#include <glad/glad.h>
+#include <string>
+#include <unordered_map>
+#include <map>
+#include "stb_image.h"
 
 namespace Flux {
-	class Heiarchy;
 
-	class Properties {
-	public:
-		void renderProperties(Heiarchy* h = nullptr);
-	};
+    class TextureLoader {
+    public:
+        static TextureLoader& Get() {
+            static TextureLoader instance;
+            return instance;
+        }
+
+        static unsigned int Load(const std::string& path);
+        void         Unload(const std::string& path);
+
+    private:
+        static std::unordered_map<std::string, unsigned int> cache;
+    };
+
 }

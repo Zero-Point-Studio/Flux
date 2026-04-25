@@ -16,18 +16,37 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+
 #pragma once
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <vector>
 #include "Model.h"
+#include "./mechanics/Scenenode.h"
 
 namespace Flux {
+
     class Renderer3D {
     public:
         void Init();
-        void DrawScene(Model& model, glm::mat4 modelMatrix, glm::mat4 view, glm::mat4 proj, float time);
+
+        void DrawScene(Model& model, unsigned int overrideTexID,
+                       glm::mat4 modelMatrix, glm::mat4 view, glm::mat4 proj,
+                       glm::vec3 cameraPos,
+                       const std::vector<SceneNode>& lights,
+                       float alpha = 1.0f);
+
+        void DrawBillboard(unsigned int texID,
+                           glm::vec3 worldPos, float size,
+                           glm::mat4 view, glm::mat4 proj);
 
     private:
-        unsigned int shaderProgram;
+        unsigned int shaderProgram     = 0;
+        unsigned int billboardProgram  = 0;
+        unsigned int billboardVAO      = 0;
+        unsigned int billboardVBO      = 0;
+
+        void InitBillboard();
     };
+
 }

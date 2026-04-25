@@ -25,6 +25,7 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <string>
+#include <filesystem>
 #include "./gui/viewport/viewport.h"
 #include "./gui/viewport/explorer.h"
 #include "./gui/viewport/ribbon.h"
@@ -34,6 +35,7 @@
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
+#include "stb_image.h"
 
 namespace Flux {
 	class Window

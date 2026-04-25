@@ -31,9 +31,6 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
-
 namespace Flux {
 	Window::Window(int width, int height, const std::string& title)
 		: m_width(width), m_height(height), m_title(title)
@@ -148,19 +145,19 @@ namespace Flux {
 			ImGui::DockBuilderDockWindow("Explorer", dock_id_right);
 			ImGui::DockBuilderDockWindow("Output", dock_id_bottom);
 			ImGui::DockBuilderDockWindow("Properties", dock_id_bottomRight);
-			ImGui::DockBuilderDockWindow("Scene Heiarchy", dock_id_left);
+			ImGui::DockBuilderDockWindow("Heiarchy", dock_id_left);
 
 
 			ImGui::DockBuilderFinish(dockspace_id);
 		}
 		ImGui::End();
 
-		m_viewport.RenderViewport();
+		m_viewport.RenderViewport(m_heiarchy);
 		m_explorer.renderExplorer(m_viewport);
 		m_ribbon.renderRibbon();
 		m_output.renderOutput();
 		m_properties.renderProperties();
-		m_heiarchy.renderHeiarchy(m_viewport);
+		m_heiarchy.renderHeiarchy(m_viewport.activeProjectPath);
 
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

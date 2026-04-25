@@ -19,6 +19,12 @@ The engine is currently in early development, and is not yet ready for productio
 - Basic scene management
 - Model transformation (translation, rotation, and scaling)
 
+## Sneak peeks
+
+![Screenshot](cool/FluxScreenshot.png)
+The first screenshot of the engine.
+
+
 ## Depedencies
 Here are the main libraries that Flux depends on:
 

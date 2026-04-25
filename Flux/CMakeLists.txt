@@ -17,14 +17,7 @@ add_executable (Flux
 	"engine/gui/viewport/properties.cpp" 
 	"engine/Model.h" 
 	"engine/3DRenderer.h"
- "engine/OpenGLManager.cpp" "engine/3DRenderer.cpp" "engine/Model.cpp" "engine/mechanics/camera.h"
-		engine/gui/viewport/heiarchy.cpp
-		engine/gui/viewport/heiarchy.h
-		engine/mechanics/Scenenode.h
-		engine/Textureloader.cpp
-		engine/Textureloader.h
-		engine/stb_implementation.cpp
-)
+ "engine/OpenGLManager.cpp" "engine/3DRenderer.cpp" "engine/Model.cpp" "engine/mechanics/camera.h")
 
 if(WIN32)
     set_target_properties(Flux PROPERTIES 
@@ -41,8 +34,6 @@ find_package(assimp CONFIG REQUIRED)
 find_package(imguizmo CONFIG REQUIRED)
 
 file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/assets" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
-file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/assets/models" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
-file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/assets/icons" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
 file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/templates"
 		DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
 file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/templates/Project_Templates"
@@ -52,16 +43,6 @@ file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/templates/File_Templates"
 file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/templates/File_Templates/scripts"
 		DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
 file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/templates/File_Templates/models"
-		DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
-file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/engine"
-		DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
-
-file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/engine/gui"
-		DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
-file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/engine/gui/viewport"
-		DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
-
-file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/engine/mechanics"
 		DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
 
 

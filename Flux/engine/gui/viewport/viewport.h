@@ -15,63 +15,74 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-
 #pragma once
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <iostream>
 #include <string>
 #include <memory>
-#include <filesystem>
 #include "imgui.h"
-#include "ImGuizmo.h"
-
-#define GLM_ENABLE_EXPERIMENTAL
-#include <glm/gtx/euler_angles.hpp>
 
 #include "../engine/OpenGLManager.h"
 #include "../engine/3DRenderer.h"
 #include "../engine/Model.h"
 #include "../engine/mechanics/camera.h"
-#include "heiarchy.h"
-#include "Textureloader.h"
+#include "explorer.h"
+
+#include <unordered_map>
+
+extern float vertices[];
 
 namespace Flux {
-
 	extern bool showSettings;
 	class OpenGLManager;
 	class Renderer3D;
+	class Model;
+
+	struct GameObject{
+		std::string name;
+		std::shared_ptr<Model> modelBlueprint;
+
+		glm::vec3 position = glm::vec3(0.0f);
+		glm::vec3 rotation = glm::vec3(0.0f);
+		glm::vec3 scale = glm::vec3(1.0f);
+
+		glm::mat4 GetTransformMatrix() {
+			float matrix[16];
+			float t[3] = { position.x, position.y, position.z };
+			float r[3] = { rotation.x, rotation.y, rotation.z };
+			float s[3] = { scale.x, scale.y, scale.z };
+			ImGuizmo::RecomposeMatrixFromComponents(t, r, s, matrix);
+			return glm::make_mat4(matrix);
+		}
+	};
 
 	class Viewport {
 	public:
 		void Init();
-		void RenderViewport(Heiarchy& heiarchy);
+		void RenderViewport();
 
-		std::filesystem::path activeProjectPath;
+		std::vector<GameObject> sceneObjects;
+		int selectedObjectIndex = -1;
 
 	private:
+		bool CheckSphereHit(glm::vec3 rayOrigin, glm::vec3 rayDir, glm::vec3 objCenter, float radius);
+		void HandleObjectSelection(ImVec2 mousePos, ImVec2 imageSize, glm::mat4 proj, glm::mat4 view);
+		
+		unsigned int fbo;
+		unsigned int textureColorBuffer;
+		unsigned int rbo;
+		unsigned int VAO, VBO;
+		unsigned int shaderProgram;
+		unsigned int indexCount;
 		std::unique_ptr<OpenGLManager> glManager;
-		std::unique_ptr<Renderer3D>    renderer;
-		std::unique_ptr<Camera>        camera;
-
-		std::shared_ptr<Model> ghostModel;
-		std::string            ghostPath;
-		glm::vec3              ghostPos  = glm::vec3(0.f);
-		bool                   isDraggingModel = false;
-
-		bool CheckSphereHit(glm::vec3 ro, glm::vec3 rd, glm::vec3 center, float radius);
-		void HandleObjectSelection(ImVec2 mousePos, ImVec2 sz,
-								   glm::mat4 proj, glm::mat4 view,
-								   Heiarchy& heiarchy);
-
-		glm::vec3 RaycastToGroundPlane(ImVec2 mousePos, ImVec2 imagePos, ImVec2 size,
-									   glm::mat4 proj, glm::mat4 view);
-
-		void DrawLightGizmos(Heiarchy& heiarchy,
-							 glm::mat4 view, glm::mat4 proj,
-							 ImVec2 imagePos, ImVec2 size);
+		std::unique_ptr<Renderer3D> renderer;
+		std::unique_ptr<Model> currentModel;
+		std::unique_ptr<Camera> camera;
+		std::unordered_map<std::string, std::shared_ptr<Model>> modelRegistry;
+		std::shared_ptr<Model> GetOrLoadModel(const std::string& path);
 	};
-
 }

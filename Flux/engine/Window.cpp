@@ -31,6 +31,9 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
 namespace Flux {
 	Window::Window(int width, int height, const std::string& title)
 		: m_width(width), m_height(height), m_title(title)
@@ -136,7 +139,7 @@ namespace Flux {
 			ImGuiID dock_id_bottomRight;
 			ImGuiID dock_id_center = dockspace_id;
 
-			dock_id_left = ImGui::DockBuilderSplitNode(dock_id_center, ImGuiDir_Left, 0.32f, nullptr, &dock_id_center);
+			dock_id_left = ImGui::DockBuilderSplitNode(dock_id_center, ImGuiDir_Left, 0.2f, nullptr, &dock_id_center);
 			dock_id_bottom = ImGui::DockBuilderSplitNode(dock_id_center, ImGuiDir_Down, 0.25f, nullptr, &dock_id_center);
 			dock_id_right = ImGui::DockBuilderSplitNode(dock_id_center, ImGuiDir_Right, 0.32f, nullptr, &dock_id_center);
 			dock_id_bottomRight = ImGui::DockBuilderSplitNode(dock_id_right, ImGuiDir_Down, 0.5f, nullptr, &dock_id_right);
@@ -145,19 +148,16 @@ namespace Flux {
 			ImGui::DockBuilderDockWindow("Explorer", dock_id_right);
 			ImGui::DockBuilderDockWindow("Output", dock_id_bottom);
 			ImGui::DockBuilderDockWindow("Properties", dock_id_bottomRight);
-			ImGui::DockBuilderDockWindow("Heiarchy", dock_id_left);
-
 
 			ImGui::DockBuilderFinish(dockspace_id);
 		}
 		ImGui::End();
 
-		m_viewport.RenderViewport(m_heiarchy);
+		m_viewport.RenderViewport();
 		m_explorer.renderExplorer(m_viewport);
 		m_ribbon.renderRibbon();
 		m_output.renderOutput();
 		m_properties.renderProperties();
-		m_heiarchy.renderHeiarchy(m_viewport.activeProjectPath);
 
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Flux Engine
+Exec=Flux
+Icon=flux
+Categories=Development;
+Comment=A free and open source game engine

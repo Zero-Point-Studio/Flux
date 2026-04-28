@@ -22,6 +22,8 @@
 #include "Model.h"
 #include <iostream>
 #include <glm/gtx/string_cast.hpp>
+#include "../../utils/pathHelper.h"
+#include "heiarchy.h"
 
 namespace Flux {
 
@@ -35,6 +37,18 @@ void Viewport::Init() {
     glManager->Init(1280, 720);
     renderer->Init();
     renderer->InitGrid();
+
+    renderer->InitSkybox();
+
+    std::vector<std::string> faces = {
+        PathHelper::GetAssetPath("Flux/assets/skybox/skybox_r.png"),
+        PathHelper::GetAssetPath("Flux/assets/skybox/skybox_l.png"),
+        PathHelper::GetAssetPath("Flux/assets/skybox/skybox_t.png"),
+        PathHelper::GetAssetPath("Flux/assets/skybox/skybox_d.png"),
+        PathHelper::GetAssetPath("Flux/assets/skybox/skybox_f.png"),
+        PathHelper::GetAssetPath("Flux/assets/skybox/skybox_b.png")
+    };
+    unsigned int skyboxID = TextureLoader::LoadCubemap(faces);
 }
 
 bool Viewport::CheckSphereHit(glm::vec3 ro, glm::vec3 rd, glm::vec3 center, float radius) {
@@ -159,6 +173,8 @@ void Viewport::DrawLightGizmos(Heiarchy& heiarchy,
     }
 }
 
+unsigned int skyboxID;
+
 void Viewport::RenderViewport(Heiarchy& heiarchy)
 {
     ImGuizmo::BeginFrame();
@@ -229,6 +245,8 @@ void Viewport::RenderViewport(Heiarchy& heiarchy)
             renderer->DrawBillboard(node.textureID, node.position, 0.5f, view, proj);
         }
     }
+
+    renderer->DrawSkybox(camera->GetViewMatrix(), proj, skyboxID);
 
     if (showGrid) {
         renderer->DrawGrid(view, proj, camera->Position);
@@ -369,11 +387,21 @@ void Viewport::RenderViewport(Heiarchy& heiarchy)
     }
 
     if (ImGui::BeginPopup("ViewportCtx")) {
+        auto tryAdd = [&](const char* rel, const char* addName) {
+            std::string full = PathHelper::GetAssetPath(std::string("assets/models/") + rel);
+
+            if (!activeProjectPath.empty()) {
+                std::filesystem::path candidate = activeProjectPath / "models" / rel;
+                if (std::filesystem::exists(candidate)) full = candidate.string();
+            }
+            heiarchy.AddModel(full, addName);
+        };
+
         if (ImGui::BeginMenu("Add")) {
             if (ImGui::BeginMenu("Mesh")) {
-                if (ImGui::MenuItem("Cube"))   heiarchy.AddModel("assets/models/cube.obj",   "Cube");
-                if (ImGui::MenuItem("Sphere")) heiarchy.AddModel("assets/models/sphere.obj", "Sphere");
-                if (ImGui::MenuItem("Monkey")) heiarchy.AddModel("assets/models/monkey.obj", "Monkey");
+                if (ImGui::MenuItem("Cube"))   tryAdd("cube.obj", "Cube");
+                if (ImGui::MenuItem("Sphere")) tryAdd("sphere.obj", "Sphere");
+                if (ImGui::MenuItem("Monkey")) tryAdd("monkey.obj", "Monkey");
                 ImGui::EndMenu();
             }
             if (ImGui::BeginMenu("Light")) {

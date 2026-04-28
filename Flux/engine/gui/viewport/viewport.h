@@ -74,6 +74,7 @@ namespace Flux {
 		void DrawLightGizmos(Heiarchy& heiarchy,
 							 glm::mat4 view, glm::mat4 proj,
 							 ImVec2 imagePos, ImVec2 size);
+		unsigned int skyboxTexture = 0;
 	};
 
 }

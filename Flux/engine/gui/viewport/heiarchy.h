@@ -32,7 +32,7 @@ namespace Flux {
     class Heiarchy {
     public:
         std::vector<SceneNode> nodes;
-        int                    selectedIndex = -1;
+        int selectedIndex = -1;
 
         void renderHeiarchy(const std::filesystem::path& activeProjectPath);
 

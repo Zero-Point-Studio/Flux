@@ -33,8 +33,8 @@ namespace Flux {
         }
 
         static unsigned int Load(const std::string& path);
-        void         Unload(const std::string& path);
-
+        void Unload(const std::string& path);
+        static unsigned int LoadCubemap(std::vector<std::string> faces);
     private:
         static std::unordered_map<std::string, unsigned int> cache;
     };

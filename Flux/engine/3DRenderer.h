@@ -44,11 +44,17 @@ namespace Flux {
         void InitGrid();
         void DrawGrid(glm::mat4 view, glm::mat4 proj, glm::vec3 cameraPos);
 
+        void InitSkybox();
+        void DrawSkybox(glm::mat4 view, glm::mat4 proj, unsigned int cubemapTex);
+
     private:
         unsigned int shaderProgram     = 0;
         unsigned int billboardProgram  = 0;
         unsigned int billboardVAO      = 0;
         unsigned int billboardVBO      = 0;
+        unsigned int skyboxProgram = 0;
+        unsigned int skyboxVAO = 0;
+        unsigned int skyboxVBO = 0;
         unsigned int gridProgram, gridVAO;
 
         void InitBillboard();

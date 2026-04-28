@@ -363,3 +363,4 @@ MigrationBackup/
 FodyWeavers.xsd
 
 CMakeLists.txt
+.idea/

@@ -22,41 +22,38 @@
 
 namespace Flux {
 
-	extern bool showSettings;
-	class OpenGLManager;
-	class Renderer3D;
+    extern bool showSettings;
+    class OpenGLManager;
+    class Renderer3D;
 
-	class Viewport {
-	public:
-		void Init();
-		void RenderViewport(Heiarchy& heiarchy);
+    class Viewport {
+    public:
+        void Init();
+        void RenderViewport(Heiarchy& heiarchy);
 
-		std::filesystem::path activeProjectPath;
+        std::filesystem::path activeProjectPath;
+        bool showGrid     = true;
+        bool vsyncEnabled = true;
 
-		bool showGrid = true;
-		bool vsyncEnabled = true;
-	private:
-		std::unique_ptr<OpenGLManager> glManager;
-		std::unique_ptr<Renderer3D>    renderer;
-		std::unique_ptr<Camera>        camera;
+    private:
+        std::unique_ptr<OpenGLManager> glManager;
+        std::unique_ptr<Renderer3D>    renderer;
+        std::unique_ptr<Camera>        camera;
 
-		std::shared_ptr<Model> ghostModel;
-		std::string            ghostPath;
-		glm::vec3              ghostPos  = glm::vec3(0.f);
-		bool                   isDraggingModel = false;
+        std::shared_ptr<Model> ghostModel;
+        std::string            ghostPath;
+        glm::vec3              ghostPos        = glm::vec3(0.f);
+        bool                   isDraggingModel = false;
 
-		bool CheckSphereHit(glm::vec3 ro, glm::vec3 rd, glm::vec3 center, float radius);
-		void HandleObjectSelection(ImVec2 mousePos, ImVec2 sz,
-								   glm::mat4 proj, glm::mat4 view,
-								   Heiarchy& heiarchy);
-
-		glm::vec3 RaycastToGroundPlane(ImVec2 mousePos, ImVec2 imagePos, ImVec2 size,
-									   glm::mat4 proj, glm::mat4 view);
-
-		void DrawLightGizmos(Heiarchy& heiarchy,
-							 glm::mat4 view, glm::mat4 proj,
-							 ImVec2 imagePos, ImVec2 size);
-		unsigned int skyboxTexture = 0;
-	};
+        bool CheckSphereHit(glm::vec3 ro, glm::vec3 rd, glm::vec3 center, float radius);
+        void HandleObjectSelection(ImVec2 mousePos, ImVec2 sz,
+                                   glm::mat4 proj, glm::mat4 view,
+                                   Heiarchy& heiarchy);
+        glm::vec3 RaycastToGroundPlane(ImVec2 mousePos, ImVec2 imagePos, ImVec2 size,
+                                       glm::mat4 proj, glm::mat4 view);
+        void DrawLightGizmos(Heiarchy& heiarchy,
+                             glm::mat4 view, glm::mat4 proj,
+                             ImVec2 imagePos, ImVec2 size);
+    };
 
 }

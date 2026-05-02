@@ -30,46 +30,58 @@ std::shared_ptr<Model> Heiarchy::GetOrLoadModel(const std::string& path) {
     return m;
 }
 
+SceneNode* Heiarchy::GetLightingNode() {
+    for (auto& n : nodes)
+        if (n.isLightingNode) return &n;
+    return nullptr;
+}
+
 void Heiarchy::setup() {
-    AddLight(NodeType::DirectionalLight, "Sun");
-    SceneNode& sunNode = nodes.back();
-    sunNode.position = glm::vec3(0.0f, 10.0f, 0.0f);
+    SceneNode lighting;
+    lighting.type            = NodeType::DirectionalLight;
+    lighting.name            = "Lighting";
+    lighting.isLightingNode  = true;
+    lighting.position        = glm::vec3(0.0f, 10.0f, 0.0f);
 
-    float pitch = -75.0f, yaw = 20.0f, roll = 0.0f;
-    sunNode.rotation = glm::vec3(pitch, yaw, roll);
+    float pitch = -45.0f, yaw = 20.0f;
+    lighting.rotation = glm::vec3(pitch, yaw, 0.0f);
+    glm::quat q = glm::angleAxis(glm::radians(yaw),  glm::vec3(0,1,0))
+                * glm::angleAxis(glm::radians(pitch), glm::vec3(1,0,0));
+    lighting.light.direction  = glm::normalize(q * glm::vec3(0.f, -1.f, 0.f));
+    lighting.light.color      = glm::vec3(1.0f, 0.97f, 0.88f);
+    lighting.light.intensity  = 3.5f;
+    lighting.light.timeOfDay  = 14.0f;
+    lighting.light.brightness = 2.0f;
 
-    glm::quat q = glm::angleAxis(glm::radians(yaw),   glm::vec3(0,1,0))
-                * glm::angleAxis(glm::radians(pitch),  glm::vec3(1,0,0))
-                * glm::angleAxis(glm::radians(roll),   glm::vec3(0,0,1));
-    sunNode.light.direction = glm::normalize(q * glm::vec3(0.f, -1.f, 0.f));
+    std::string iconPath = PathHelper::GetAssetPath("assets/icons/l_dir.png");
+    if (std::filesystem::exists(iconPath))
+        lighting.textureID = TextureLoader::Load(iconPath);
+
+    nodes.push_back(lighting);
+    selectedIndex = -1;
 
     AddModel(PathHelper::GetAssetPath(std::string("assets/models/cube.obj")));
 }
 
 std::string Heiarchy::GetUniqueName(const std::string& baseName) {
-    std::string newName = baseName;
+    std::string name = baseName;
     int counter = 1;
-    bool nameExists = true;
-    while (nameExists) {
-        nameExists = false;
-        for (const auto& node : nodes) {
-            if (node.name == newName) {
-                nameExists = true;
-                newName = baseName + " (" + std::to_string(counter) + ")";
-                counter++;
-                break;
-            }
-        }
+    for (;;) {
+        bool clash = false;
+        for (const auto& n : nodes)
+            if (n.name == name) { clash = true; break; }
+        if (!clash) break;
+        name = baseName + " (" + std::to_string(counter++) + ")";
     }
-    return newName;
+    return name;
 }
 
 void Heiarchy::AddModel(const std::string& path, const std::string& name) {
     SceneNode n;
     n.type  = NodeType::Mesh;
     n.model = GetOrLoadModel(path);
-    std::string desiredName = name.empty() ? std::filesystem::path(path).stem().string() : name;
-    n.name  = GetUniqueName(desiredName);
+    std::string desired = name.empty() ? std::filesystem::path(path).stem().string() : name;
+    n.name  = GetUniqueName(desired);
     nodes.push_back(n);
     selectedIndex = (int)nodes.size() - 1;
 }
@@ -78,33 +90,28 @@ void Heiarchy::AddLight(NodeType type, const std::string& name) {
     SceneNode n;
     n.type = type;
 
-    auto tryLoadIcon = [&](const char* iconRelPath) -> unsigned int {
-        std::string absolutePath = PathHelper::GetAssetPath(iconRelPath);
-        if (std::filesystem::exists(absolutePath))
-            return TextureLoader::Load(absolutePath);
-        else
-            std::cerr << "Warning: Could not find icon at " << absolutePath << "\n";
+    auto tryLoadIcon = [&](const char* rel) -> unsigned int {
+        std::string p = PathHelper::GetAssetPath(rel);
+        if (std::filesystem::exists(p)) return TextureLoader::Load(p);
         return 0;
     };
 
-    std::string baseName = name;
     switch (type) {
         case NodeType::DirectionalLight:
-            n.name      = name.empty() ? "Directional Light" : name;
+            n.name      = GetUniqueName(name.empty() ? "Directional Light" : name);
             n.textureID = tryLoadIcon("assets/icons/l_dir.png");
             break;
         case NodeType::PointLight:
-            n.name      = name.empty() ? "Point Light" : name;
+            n.name      = GetUniqueName(name.empty() ? "Point Light" : name);
             n.textureID = tryLoadIcon("assets/icons/l_point.png");
             break;
         case NodeType::SpotLight:
-            n.name      = name.empty() ? "Spot Light" : name;
+            n.name      = GetUniqueName(name.empty() ? "Spot Light" : name);
             n.textureID = tryLoadIcon("assets/icons/l_spot.png");
             break;
         default:
-            n.name = GetUniqueName(baseName);
+            n.name = GetUniqueName(name.empty() ? "Surface Light" : name);
     }
-
     nodes.push_back(n);
     selectedIndex = (int)nodes.size() - 1;
 }
@@ -113,7 +120,7 @@ void Heiarchy::DrawNode(int index) {
     SceneNode& node = nodes[index];
     std::string uid = "##node" + std::to_string(index);
 
-    if (renamingIndex == index) {
+    if (renamingIndex == index && !node.isLightingNode) {
         ImGui::SetNextItemWidth(-1);
         ImGui::SetKeyboardFocusHere();
         if (ImGui::InputText(("##ren" + uid).c_str(), renameBuffer, sizeof(renameBuffer),
@@ -129,6 +136,9 @@ void Heiarchy::DrawNode(int index) {
     bool selected = (selectedIndex == index);
     std::string label = std::string(NodeTypeLabel(node.type)) + node.name + uid;
 
+    if (node.isLightingNode)
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.85f, 0.35f, 1.0f));
+
     ImGuiTreeNodeFlags flags =
         ImGuiTreeNodeFlags_Leaf |
         ImGuiTreeNodeFlags_NoTreePushOnOpen |
@@ -139,89 +149,97 @@ void Heiarchy::DrawNode(int index) {
         ImGui::PushStyleColor(ImGuiCol_Header,        ImVec4(0.26f, 0.59f, 0.98f, 0.35f));
         ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.26f, 0.59f, 0.98f, 0.55f));
     }
+
     ImGui::TreeNodeEx(label.c_str(), flags);
+
     if (selected) ImGui::PopStyleColor(2);
+    if (node.isLightingNode) ImGui::PopStyleColor();
 
     if (ImGui::IsItemClicked(ImGuiMouseButton_Left))
         selectedIndex = index;
 
-    if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
+    if (!node.isLightingNode &&
+        ImGui::IsItemHovered() &&
+        ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+    {
         renamingIndex = index;
         std::strncpy(renameBuffer, node.name.c_str(), sizeof(renameBuffer) - 1);
         renameBuffer[sizeof(renameBuffer) - 1] = '\0';
     }
 
-    if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID)) {
-        ImGui::SetDragDropPayload("HIER_NODE", &index, sizeof(int));
-        ImGui::Text("Moving  %s", node.name.c_str());
-        ImGui::EndDragDropSource();
+    if (!node.isLightingNode) {
+        if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID)) {
+            ImGui::SetDragDropPayload("HIER_NODE", &index, sizeof(int));
+            ImGui::Text("Moving  %s", node.name.c_str());
+            ImGui::EndDragDropSource();
+        }
     }
 
     if (ImGui::BeginDragDropTarget()) {
         if (const ImGuiPayload* p = ImGui::AcceptDragDropPayload("HIER_NODE")) {
             int srcIdx = *(const int*)p->Data;
             if (srcIdx != index && srcIdx >= 0 && srcIdx < (int)nodes.size()) {
-                SceneNode moved = nodes[srcIdx];
-                nodes.erase(nodes.begin() + srcIdx);
-                int insertAt = (srcIdx < index) ? index : index + 1;
-                if (insertAt > (int)nodes.size()) insertAt = (int)nodes.size();
-                nodes.insert(nodes.begin() + insertAt, moved);
-                selectedIndex = insertAt;
+                if (!nodes[srcIdx].isLightingNode && index != 0) {
+                    SceneNode moved = nodes[srcIdx];
+                    nodes.erase(nodes.begin() + srcIdx);
+                    int insertAt = (srcIdx < index) ? index : index + 1;
+                    if (insertAt > (int)nodes.size()) insertAt = (int)nodes.size();
+                    nodes.insert(nodes.begin() + insertAt, moved);
+                    selectedIndex = insertAt;
+                }
             }
         }
         ImGui::EndDragDropTarget();
     }
 
     if (ImGui::BeginPopupContextItem(("##ctx" + uid).c_str())) {
-        if (ImGui::MenuItem("Rename")) {
-            renamingIndex = index;
-            std::strncpy(renameBuffer, node.name.c_str(), sizeof(renameBuffer) - 1);
-            renameBuffer[sizeof(renameBuffer) - 1] = '\0';
-        }
-        ImGui::Separator();
-        if (ImGui::MenuItem("Delete")) {
-            nodes.erase(nodes.begin() + index);
-            if (selectedIndex >= (int)nodes.size())
+        if (node.isLightingNode) {
+            ImGui::TextDisabled("Lighting (locked)");
+        } else {
+            if (ImGui::MenuItem("Rename")) {
+                renamingIndex = index;
+                std::strncpy(renameBuffer, node.name.c_str(), sizeof(renameBuffer) - 1);
+                renameBuffer[sizeof(renameBuffer) - 1] = '\0';
+            }
+            ImGui::Separator();
+            if (ImGui::MenuItem("Delete")) {
+                nodes.erase(nodes.begin() + index);
+                if (selectedIndex >= (int)nodes.size())
+                    selectedIndex = (int)nodes.size() - 1;
+                ImGui::EndPopup();
+                return;
+            }
+            ImGui::Separator();
+            if (ImGui::MenuItem("Duplicate")) {
+                SceneNode copy    = nodes[index];
+                copy.name         = GetUniqueName(copy.name);
+                copy.isLightingNode = false;
+                nodes.push_back(copy);
                 selectedIndex = (int)nodes.size() - 1;
-            ImGui::EndPopup();
-            return;
-        }
-        ImGui::Separator();
-        if (ImGui::MenuItem("Duplicate")) {
-            SceneNode copyNode = nodes[index];
-
-            copyNode.name = GetUniqueName(copyNode.name);
-
-            nodes.push_back(copyNode);
-
-            selectedIndex = (int)nodes.size() - 1;
+            }
         }
         ImGui::EndPopup();
     }
 }
 
 void Heiarchy::renderHeiarchy(const std::filesystem::path& activeProjectPath) {
-
     ImGui::Begin("Heiarchy");
     if (ImGui::IsWindowHovered()) ImGui::SetWindowFocus();
 
     ImGui::Text("Scene");
     ImGui::Separator();
 
-
     for (int i = 0; i < (int)nodes.size(); i++)
         DrawNode(i);
 
     float emptyH = std::max(ImGui::GetContentRegionAvail().y, 8.0f);
-    ImGui::InvisibleButton("##hierEmpty",
-        ImVec2(ImGui::GetContentRegionAvail().x, emptyH));
+    ImGui::InvisibleButton("##hierEmpty", ImVec2(ImGui::GetContentRegionAvail().x, emptyH));
 
     if (ImGui::BeginDragDropTarget()) {
         if (const ImGuiPayload* p = ImGui::AcceptDragDropPayload("EXPLORER_FILE")) {
             std::string path(static_cast<const char*>(p->Data));
             std::string ext = std::filesystem::path(path).extension().string();
-            if (ext == ".obj" || ext == ".fbx")
-                AddModel(path);
+            if (ext == ".obj" || ext == ".fbx") AddModel(path);
         }
         ImGui::EndDragDropTarget();
     }
@@ -231,10 +249,9 @@ void Heiarchy::renderHeiarchy(const std::filesystem::path& activeProjectPath) {
             if (ImGui::BeginMenu("Mesh")) {
                 auto tryAdd = [&](const char* rel, const char* addName) {
                     std::string full = PathHelper::GetAssetPath(std::string("assets/models/") + rel);
-
                     if (!activeProjectPath.empty()) {
-                        std::filesystem::path candidate = activeProjectPath / "models" / rel;
-                        if (std::filesystem::exists(candidate)) full = candidate.string();
+                        auto c = activeProjectPath / "models" / rel;
+                        if (std::filesystem::exists(c)) full = c.string();
                     }
                     AddModel(full, addName);
                 };

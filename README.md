@@ -6,7 +6,7 @@ Flux is a versatile, high-performance game engine for 3D (and soon 2D).
 ## Planned
 
 - 2D support
-- Scripting support (Lua, Python, C++, C, and etc.)
+- Scripting support (Lua and C/C++)
 - More graphics APIs (Vulkan, DirectX, SDL, and etc.)
 - More platforms (Linux and MacOS)
 - More features (physics, audio, animation, and etc.)
@@ -18,9 +18,10 @@ The engine is currently in early development and is not yet ready for production
 - Viewport camera movement
 - Basic scene management
 - Model transformation (translation, rotation, and scaling)
+- "Decent" lighting
 
 ## Getting started
-Flux gomna be cross=platform on release (Except for macOS which is still in development)
+Flux gonna be cross platform on release (Except for macOS which is still in development)
     
 | Windows (.zip)                                          | Linux (AppImage)                                                                                                              | Linux (.deb)                                                        |
 | :------------------------------------------------------ | :---------------------------------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------ |
@@ -33,6 +34,9 @@ Flux gomna be cross=platform on release (Except for macOS which is still in deve
 
 ![Screenshot](cool/FluxScreenshot.png)
 *The first screenshot of the engine showing the 3D grid and viewport.*
+
+![Screenshot](cool/LightingSnapshot.png)
+*A screenshot for the lighting in Flux (as of May 2. 2026)
 
 ## Dependencies
 Flux is built on the shoulders of giants. We use modern 2026 techniques and these industry-standard libraries:

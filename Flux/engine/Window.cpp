@@ -61,6 +61,7 @@ namespace Flux
         }
 
         m_viewport.Init();
+        m_heiarchy.setup();
 
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();

@@ -6,6 +6,10 @@
 #include <filesystem>
 #include "../../utils/PathHelper.h"
 
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtc/quaternion.hpp>
+#include <glm/gtx/quaternion.hpp>
+
 namespace Flux {
 
 static const char* NodeTypeLabel(NodeType t) {
@@ -26,11 +30,46 @@ std::shared_ptr<Model> Heiarchy::GetOrLoadModel(const std::string& path) {
     return m;
 }
 
+void Heiarchy::setup() {
+    AddLight(NodeType::DirectionalLight, "Sun");
+    SceneNode& sunNode = nodes.back();
+    sunNode.position = glm::vec3(0.0f, 10.0f, 0.0f);
+
+    float pitch = -75.0f, yaw = 20.0f, roll = 0.0f;
+    sunNode.rotation = glm::vec3(pitch, yaw, roll);
+
+    glm::quat q = glm::angleAxis(glm::radians(yaw),   glm::vec3(0,1,0))
+                * glm::angleAxis(glm::radians(pitch),  glm::vec3(1,0,0))
+                * glm::angleAxis(glm::radians(roll),   glm::vec3(0,0,1));
+    sunNode.light.direction = glm::normalize(q * glm::vec3(0.f, -1.f, 0.f));
+
+    AddModel(PathHelper::GetAssetPath(std::string("assets/models/cube.obj")));
+}
+
+std::string Heiarchy::GetUniqueName(const std::string& baseName) {
+    std::string newName = baseName;
+    int counter = 1;
+    bool nameExists = true;
+    while (nameExists) {
+        nameExists = false;
+        for (const auto& node : nodes) {
+            if (node.name == newName) {
+                nameExists = true;
+                newName = baseName + " (" + std::to_string(counter) + ")";
+                counter++;
+                break;
+            }
+        }
+    }
+    return newName;
+}
+
 void Heiarchy::AddModel(const std::string& path, const std::string& name) {
     SceneNode n;
     n.type  = NodeType::Mesh;
     n.model = GetOrLoadModel(path);
-    n.name  = name.empty() ? std::filesystem::path(path).stem().string() : name;
+    std::string desiredName = name.empty() ? std::filesystem::path(path).stem().string() : name;
+    n.name  = GetUniqueName(desiredName);
     nodes.push_back(n);
     selectedIndex = (int)nodes.size() - 1;
 }
@@ -48,6 +87,7 @@ void Heiarchy::AddLight(NodeType type, const std::string& name) {
         return 0;
     };
 
+    std::string baseName = name;
     switch (type) {
         case NodeType::DirectionalLight:
             n.name      = name.empty() ? "Directional Light" : name;
@@ -62,7 +102,7 @@ void Heiarchy::AddLight(NodeType type, const std::string& name) {
             n.textureID = tryLoadIcon("assets/icons/l_spot.png");
             break;
         default:
-            n.name = name;
+            n.name = GetUniqueName(baseName);
     }
 
     nodes.push_back(n);
@@ -150,7 +190,7 @@ void Heiarchy::DrawNode(int index) {
         if (ImGui::MenuItem("Duplicate")) {
             SceneNode copyNode = nodes[index];
 
-            copyNode.name = copyNode.name + " (Copy)";
+            copyNode.name = GetUniqueName(copyNode.name);
 
             nodes.push_back(copyNode);
 
@@ -161,11 +201,13 @@ void Heiarchy::DrawNode(int index) {
 }
 
 void Heiarchy::renderHeiarchy(const std::filesystem::path& activeProjectPath) {
+
     ImGui::Begin("Heiarchy");
     if (ImGui::IsWindowHovered()) ImGui::SetWindowFocus();
 
     ImGui::Text("Scene");
     ImGui::Separator();
+
 
     for (int i = 0; i < (int)nodes.size(); i++)
         DrawNode(i);

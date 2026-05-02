@@ -5,9 +5,13 @@
 #include <cstring>
 #include <filesystem>
 
-namespace Flux {
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtc/quaternion.hpp>
+#include <glm/gtx/quaternion.hpp>
 
-static bool DragVec3Row(const char* label, glm::vec3& v, float speed = 0.1f) {
+namespace Flux {
+static bool DragVec3Row(const char* label, glm::vec3& v, float speed = 0.1f)
+{
     float arr[3] = { v.x, v.y, v.z };
     ImGui::PushID(label);
     ImGui::TableNextRow();
@@ -22,7 +26,8 @@ static bool DragVec3Row(const char* label, glm::vec3& v, float speed = 0.1f) {
     return changed;
 }
 
-static bool ColorRow(const char* label, glm::vec3& c) {
+static bool ColorRow(const char* label, glm::vec3& c)
+{
     float col[3] = { c.r, c.g, c.b };
     ImGui::PushID(label);
     ImGui::TableNextRow();
@@ -37,7 +42,9 @@ static bool ColorRow(const char* label, glm::vec3& c) {
     return changed;
 }
 
-static bool FloatRow(const char* label, float& f, float spd = 0.01f, float mn = 0.f, float mx = FLT_MAX) {
+static bool FloatRow(const char* label, float& f,
+                     float spd = 0.01f, float mn = 0.f, float mx = FLT_MAX)
+{
     ImGui::PushID(label);
     ImGui::TableNextRow();
     ImGui::TableSetColumnIndex(0);
@@ -50,14 +57,25 @@ static bool FloatRow(const char* label, float& f, float spd = 0.01f, float mn = 
     return changed;
 }
 
-static void BeginTable2Col() {
+static void BeginTable2Col()
+{
     ImGui::BeginTable("##t", 2,
         ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_NoSavedSettings);
-    ImGui::TableSetupColumn("L", ImGuiTableColumnFlags_WidthFixed, 90.f);
+    ImGui::TableSetupColumn("L", ImGuiTableColumnFlags_WidthFixed,   90.f);
     ImGui::TableSetupColumn("V", ImGuiTableColumnFlags_WidthStretch);
 }
 
-void Properties::renderProperties(Heiarchy* h) {
+static glm::vec3 DirectionToEuler(glm::vec3 dir)
+{
+    dir = glm::normalize(dir);
+    float pitch = glm::degrees(std::asin(-dir.y));
+    float yaw   = glm::degrees(std::atan2(dir.x, -dir.z));
+    return glm::vec3(pitch, yaw, 0.f);
+}
+
+
+void Properties::renderProperties(Heiarchy* h)
+{
     ImGui::Begin("Properties");
     if (ImGui::IsWindowHovered()) ImGui::SetWindowFocus();
 
@@ -86,7 +104,8 @@ void Properties::renderProperties(Heiarchy* h) {
     DragVec3Row("Scale",    node.scale,    0.01f);
     ImGui::EndTable();
 
-    if (node.type == NodeType::Mesh) {
+    if (node.type == NodeType::Mesh)
+    {
         ImGui::Separator();
         ImGui::Text("Mesh");
         ImGui::Spacing();
@@ -99,7 +118,6 @@ void Properties::renderProperties(Heiarchy* h) {
         ImGui::Separator();
         ImGui::Spacing();
 
-        ImGui::Spacing();
         ImGui::Text("Texture:");
         ImGui::SameLine();
         if (node.texturePath.empty())
@@ -132,8 +150,9 @@ void Properties::renderProperties(Heiarchy* h) {
                 if (node.model) node.model->SetTexture(0);
             }
         }
-
-    } else {
+    }
+    else
+    {
         ImGui::Separator();
         const char* lightLabel =
             node.type == NodeType::DirectionalLight ? "Directional Light" :
@@ -146,17 +165,26 @@ void Properties::renderProperties(Heiarchy* h) {
         ColorRow("Color",     node.light.color);
         FloatRow("Intensity", node.light.intensity, 0.01f, 0.f, 100.f);
 
-        if (node.type == NodeType::DirectionalLight)
-            DragVec3Row("Direction", node.light.direction, 0.01f);
+        if (node.type == NodeType::DirectionalLight) {
+            if (DragVec3Row("Direction", node.light.direction, 0.01f)) {
+                node.light.direction = glm::normalize(node.light.direction);
+                node.rotation = DirectionToEuler(node.light.direction);
+            }
+        }
 
         if (node.type == NodeType::PointLight)
             FloatRow("Range", node.light.range, 0.1f, 0.f, 1000.f);
 
         if (node.type == NodeType::SpotLight) {
-            DragVec3Row("Direction",  node.light.direction,   0.01f);
-            FloatRow("Range",         node.light.range,       0.1f, 0.f, 1000.f);
-            FloatRow("Inner Cutoff",  node.light.innerCutoff, 0.1f, 0.f, 90.f);
-            FloatRow("Outer Cutoff",  node.light.outerCutoff, 0.1f, 0.f, 90.f);
+            if (DragVec3Row("Direction", node.light.direction, 0.01f)) {
+                node.light.direction = glm::normalize(node.light.direction);
+                glm::vec3 euler = DirectionToEuler(node.light.direction);
+                node.rotation.x = euler.x;
+                node.rotation.y = euler.y;
+            }
+            FloatRow("Range",        node.light.range,       0.1f, 0.f, 1000.f);
+            FloatRow("Inner Cutoff", node.light.innerCutoff, 0.1f, 0.f, 90.f);
+            FloatRow("Outer Cutoff", node.light.outerCutoff, 0.1f, 0.f, 90.f);
         }
 
         if (node.type == NodeType::SurfaceLight) {

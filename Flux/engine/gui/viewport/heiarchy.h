@@ -16,10 +16,14 @@ namespace Flux {
         std::vector<SceneNode> nodes;
         int selectedIndex = -1;
 
+        void setup();
+
         void renderHeiarchy(const std::filesystem::path& activeProjectPath);
 
         void AddModel(const std::string& path, const std::string& name = "");
         void AddLight(NodeType type, const std::string& name = "");
+
+        std::string GetUniqueName(const std::string& baseName);
 
     private:
         int  renamingIndex   = -1;

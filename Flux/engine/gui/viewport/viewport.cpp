@@ -6,25 +6,32 @@
 #include <glm/gtx/string_cast.hpp>
 #include "../../utils/pathHelper.h"
 #include "heiarchy.h"
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/quaternion.hpp>
+#include <glm/gtc/quaternion.hpp>
+#include <algorithm>
+#include <cctype>
 
 namespace Flux {
 
 extern int  currentTool;
 extern bool showSettings;
 
-void Viewport::Init() {
+void Viewport::Init()
+{
     glManager = std::make_unique<OpenGLManager>();
     renderer  = std::make_unique<Renderer3D>();
     camera    = std::make_unique<Camera>(glm::vec3(0.0f, 5.0f, 15.0f));
     glManager->Init(1280, 720);
     renderer->Init();
     renderer->InitGrid();
-
     renderer->InitSkybox();
 
+    renderer->InitShadowMap(2048);
 }
 
-bool Viewport::CheckSphereHit(glm::vec3 ro, glm::vec3 rd, glm::vec3 center, float radius) {
+bool Viewport::CheckSphereHit(glm::vec3 ro, glm::vec3 rd, glm::vec3 center, float radius)
+{
     glm::vec3 oc = ro - center;
     float b = glm::dot(oc, rd);
     float c = glm::dot(oc, oc) - radius * radius;
@@ -45,7 +52,6 @@ glm::vec3 Viewport::RaycastToGroundPlane(ImVec2 mousePos, ImVec2 imagePos, ImVec
 
     float denom = rayDir.y;
     if (std::abs(denom) < 1e-6f) return ro + rayDir * 10.f;
-
     float t = -ro.y / denom;
     if (t < 0.f) t = 0.f;
     return ro + rayDir * t;
@@ -99,7 +105,6 @@ void Viewport::DrawLightGizmos(Heiarchy& heiarchy,
         if (node.type == NodeType::Mesh) continue;
 
         bool selected = (heiarchy.selectedIndex == i);
-
         renderer->DrawBillboard(node.textureID, node.position, 0.5f, view, proj);
 
         ImVec2 screenPos = WorldToScreen(node.position, view, proj, imagePos, size);
@@ -111,11 +116,9 @@ void Viewport::DrawLightGizmos(Heiarchy& heiarchy,
 
         dl->AddCircleFilled(screenPos, selected ? 6.f : 4.f, dotCol);
 
-        if (node.type == NodeType::DirectionalLight ||
-            node.type == NodeType::SpotLight)
-        {
+        if (node.type == NodeType::DirectionalLight || node.type == NodeType::SpotLight) {
             glm::vec3 arrowEnd = node.position + node.light.direction * 1.5f;
-            ImVec2 screenEnd = WorldToScreen(arrowEnd, view, proj, imagePos, size);
+            ImVec2 screenEnd   = WorldToScreen(arrowEnd, view, proj, imagePos, size);
 
             if (screenEnd.x >= imagePos.x && screenEnd.x <= imagePos.x + size.x &&
                 screenEnd.y >= imagePos.y && screenEnd.y <= imagePos.y + size.y)
@@ -126,23 +129,18 @@ void Viewport::DrawLightGizmos(Heiarchy& heiarchy,
                 float dy = screenEnd.y - screenPos.y;
                 float len = std::sqrt(dx*dx + dy*dy);
                 if (len > 1.f) {
-                    float ux = dx / len;
-                    float uy = dy / len;
-                    float headLen = 10.f;
-                    float headW   = 5.f;
-                    ImVec2 tip  = screenEnd;
-                    ImVec2 lp   = ImVec2(tip.x - ux*headLen + uy*headW,
-                                         tip.y - uy*headLen - ux*headW);
-                    ImVec2 rp   = ImVec2(tip.x - ux*headLen - uy*headW,
-                                         tip.y - uy*headLen + ux*headW);
+                    float ux = dx / len, uy = dy / len;
+                    float headLen = 10.f, headW = 5.f;
+                    ImVec2 tip = screenEnd;
+                    ImVec2 lp  = ImVec2(tip.x - ux*headLen + uy*headW, tip.y - uy*headLen - ux*headW);
+                    ImVec2 rp  = ImVec2(tip.x - ux*headLen - uy*headW, tip.y - uy*headLen + ux*headW);
                     dl->AddTriangleFilled(tip, lp, rp, arrowCol);
                 }
             }
         }
 
-        if (node.type == NodeType::PointLight) {
+        if (node.type == NodeType::PointLight)
             dl->AddCircle(screenPos, selected ? 14.f : 10.f, arrowCol, 16, 1.5f);
-        }
     }
 }
 
@@ -154,9 +152,7 @@ void Viewport::RenderViewport(Heiarchy& heiarchy)
     if (showSettings) {
         if (ImGui::Begin("Viewport Settings", &showSettings)) {
             if (ImGui::Checkbox("VSync", &vsyncEnabled))
-            {
                 glfwSwapInterval(vsyncEnabled ? 1 : 0);
-            }
             ImGui::Separator();
             ImGui::Text("Camera");
             ImGui::SliderFloat("Camera Sensitivity", &camera->MouseSensitivity, 0.01f, 0.5f);
@@ -189,14 +185,30 @@ void Viewport::RenderViewport(Heiarchy& heiarchy)
     glm::mat4 proj = glm::perspective(glm::radians(45.f), aspect, 0.1f, 1000.f);
 
     ImVec2 imagePos = ImGui::GetCursorScreenPos();
+    glm::vec3 currentSunDir = glm::vec3(0.0f, -1.0f, 0.0f);
+    for (int i = 0; i < (int)heiarchy.nodes.size(); i++) {
+        const auto& node = heiarchy.nodes[i];
+        if (node.type == NodeType::DirectionalLight) {
+            std::string lowerName = node.name;
+            std::transform(lowerName.begin(), lowerName.end(), lowerName.begin(), 
+                [](unsigned char c){ return std::tolower(c); });
+            
+            if (lowerName.find("sun") != std::string::npos) {
+                currentSunDir = node.light.direction;
+                break; 
+            }
+        }
+    }
 
-    ImGui::Checkbox("Show Grid", &this->showGrid);
+    renderer->DrawDepthPass(heiarchy.nodes, currentSunDir);
 
     glManager->Resize((int)size.x, (int)size.y);
     glManager->Bind();
     glViewport(0, 0, (int)size.x, (int)size.y);
     glClearColor(0.1f, 0.1f, 0.1f, 1.f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    renderer->DrawSkybox(camera->GetViewMatrix(), proj, currentSunDir);
 
     for (auto& node : heiarchy.nodes) {
         if (node.model != nullptr) {
@@ -213,22 +225,16 @@ void Viewport::RenderViewport(Heiarchy& heiarchy)
                             camera->Position, heiarchy.nodes, 0.45f);
     }
 
-    for (auto& node : heiarchy.nodes) {
-        if (node.type != NodeType::Mesh && node.textureID != 0) {
-            renderer->DrawBillboard(node.textureID, node.position, 0.5f, view, proj);
-        }
-    }
-
-    renderer->DrawSkybox(camera->GetViewMatrix(), proj);
-
-    if (showGrid) {
+    if (showGrid)
         renderer->DrawGrid(view, proj, camera->Position);
-    }
+    DrawLightGizmos(heiarchy, view, proj, imagePos, size);
 
     glManager->Unbind();
 
     ImGui::Image(reinterpret_cast<void*>(static_cast<intptr_t>(glManager->GetTexture())),
                  size, ImVec2(0,1), ImVec2(1,0));
+
+    ImGui::Checkbox("Show Grid", &this->showGrid);
 
     ImVec2 mousePos = ImGui::GetIO().MousePos;
     ImVec2 mouseInCanvas(mousePos.x - imagePos.x, mousePos.y - imagePos.y);
@@ -243,9 +249,8 @@ void Viewport::RenderViewport(Heiarchy& heiarchy)
 
     bool itemHovered = ImGui::IsItemHovered();
 
-    if (isDraggingModel && itemHovered) {
+    if (isDraggingModel && itemHovered)
         ghostPos = RaycastToGroundPlane(mousePos, imagePos, size, proj, view);
-    }
 
     if (ImGui::BeginDragDropTarget()) {
         if (const ImGuiPayload* p = ImGui::AcceptDragDropPayload("EXPLORER_FILE",
@@ -287,11 +292,9 @@ void Viewport::RenderViewport(Heiarchy& heiarchy)
                     {
                         std::string texPath(static_cast<const char*>(p->Data));
                         heiarchy.nodes[sel].texturePath = texPath;
-                        heiarchy.nodes[sel].textureID =
-                            TextureLoader::Load(texPath);
+                        heiarchy.nodes[sel].textureID   = TextureLoader::Load(texPath);
                         if (heiarchy.nodes[sel].model)
-                            heiarchy.nodes[sel].model->SetTexture(
-                                heiarchy.nodes[sel].textureID);
+                            heiarchy.nodes[sel].model->SetTexture(heiarchy.nodes[sel].textureID);
                     }
                 }
             }
@@ -313,11 +316,10 @@ void Viewport::RenderViewport(Heiarchy& heiarchy)
     ImGuizmo::SetDrawlist();
     ImGuizmo::SetRect(imagePos.x, imagePos.y, size.x, size.y);
 
-    if (ImGui::IsWindowFocused() || ImGui::IsWindowHovered()) {
+    if (ImGui::IsWindowFocused() || ImGui::IsWindowHovered())
         ImGuizmo::Enable(true);
-    } else {
+    else
         ImGuizmo::Enable(false);
-    }
 
     int sel = heiarchy.selectedIndex;
     if (sel >= 0 && sel < (int)heiarchy.nodes.size() && currentTool != 3) {
@@ -330,7 +332,6 @@ void Viewport::RenderViewport(Heiarchy& heiarchy)
 
         ImGuizmo::SetRect(imagePos.x, imagePos.y, size.x, size.y);
         ImGuizmo::AllowAxisFlip(false);
-
         ImGuizmo::Manipulate(glm::value_ptr(view), glm::value_ptr(proj),
                              op, ImGuizmo::LOCAL, glm::value_ptr(mm));
 
@@ -338,14 +339,25 @@ void Viewport::RenderViewport(Heiarchy& heiarchy)
             float t[3], r[3], s[3];
             ImGuizmo::DecomposeMatrixToComponents(glm::value_ptr(mm), t, r, s);
             target.position = { t[0], t[1], t[2] };
-            target.rotation = { r[0], r[1], r[2] };
             target.scale    = { s[0], s[1], s[2] };
 
-            if (target.type != NodeType::Mesh) {
-                glm::mat4 rotMat = glm::eulerAngleYXZ(
-                    glm::radians(r[1]), glm::radians(r[0]), glm::radians(r[2]));
-                glm::vec4 newDir = rotMat * glm::vec4(0.f, -1.f, 0.f, 0.f);
-                target.light.direction = glm::normalize(glm::vec3(newDir));
+            if (target.type == NodeType::Mesh) {
+                target.rotation = { r[0], r[1], r[2] };
+            }
+            else {
+                float pitch = r[0];
+                float yaw   = r[1];
+                float roll  = (target.type == NodeType::DirectionalLight)
+                              ? 0.0f 
+                              : r[2];
+
+                target.rotation = { pitch, yaw, roll };
+                glm::quat q = glm::angleAxis(glm::radians(yaw),   glm::vec3(0,1,0))
+                            * glm::angleAxis(glm::radians(pitch),  glm::vec3(1,0,0))
+                            * glm::angleAxis(glm::radians(roll),   glm::vec3(0,0,1));
+
+                glm::vec3 newDir = q * glm::vec3(0.f, -1.f, 0.f);
+                target.light.direction = glm::normalize(newDir);
             }
         }
     }
@@ -362,7 +374,6 @@ void Viewport::RenderViewport(Heiarchy& heiarchy)
     if (ImGui::BeginPopup("ViewportCtx")) {
         auto tryAdd = [&](const char* rel, const char* addName) {
             std::string full = PathHelper::GetAssetPath(std::string("assets/models/") + rel);
-
             if (!activeProjectPath.empty()) {
                 std::filesystem::path candidate = activeProjectPath / "models" / rel;
                 if (std::filesystem::exists(candidate)) full = candidate.string();
@@ -372,7 +383,7 @@ void Viewport::RenderViewport(Heiarchy& heiarchy)
 
         if (ImGui::BeginMenu("Add")) {
             if (ImGui::BeginMenu("Mesh")) {
-                if (ImGui::MenuItem("Cube"))   tryAdd("cube.obj", "Cube");
+                if (ImGui::MenuItem("Cube"))   tryAdd("cube.obj",   "Cube");
                 if (ImGui::MenuItem("Sphere")) tryAdd("sphere.obj", "Sphere");
                 if (ImGui::MenuItem("Monkey")) tryAdd("monkey.obj", "Monkey");
                 ImGui::EndMenu();

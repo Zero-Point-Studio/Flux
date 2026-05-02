@@ -2,26 +2,34 @@
 layout(location = 0) in vec3 aPos;
 layout(location = 1) in vec3 aNormal;
 layout(location = 2) in vec2 aTexCoords;
+layout(location = 3) in vec3 aTangent;
+layout(location = 4) in vec3 aBitangent;
 
 out vec3 FragPos;
 out vec3 Normal;
 out vec2 TexCoords;
-out vec4 FragPosLightSpace;   // BUG 1: needed by fragment shader for shadow map lookup
+out vec4 FragPosLightSpace;
+out mat3 TBN;
 
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
-uniform mat4 lightSpaceMatrix;   // BUG 1: set by Renderer3D::DrawScene each frame
-
+uniform mat4 lightSpaceMatrix;
+uniform mat3 normalMatrix;
 void main()
 {
-    vec4 worldPos   = model * vec4(aPos, 1.0);
-    FragPos         = vec3(worldPos);
-    Normal          = mat3(transpose(inverse(model))) * aNormal;
-    TexCoords       = aTexCoords;
-
-    // BUG 1 FIX: transform the fragment into light clip-space for the PCF lookup
+    vec4 worldPos    = model * vec4(aPos, 1.0);
+    FragPos          = vec3(worldPos);
+    TexCoords        = aTexCoords;
     FragPosLightSpace = lightSpaceMatrix * worldPos;
+
+    Normal = normalize(normalMatrix * aNormal);
+
+    vec3 T = normalize(normalMatrix * aTangent);
+    vec3 B = normalize(normalMatrix * aBitangent);
+    vec3 N = Normal;
+    T = normalize(T - dot(T, N) * N);
+    TBN = mat3(T, B, N);
 
     gl_Position = projection * view * worldPos;
 }

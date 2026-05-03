@@ -151,21 +151,22 @@ void main() {}
                                glm::vec3 cameraPos,
                                const std::vector<SceneNode>& lights,
                                float alpha, float roughness, float metallic,
-                               float timeOfDay)
+                               float timeOfDay, glm::vec3 baseColor)
     {
         glUseProgram(shaderProgram);
+
         glEnable(GL_DEPTH_TEST);
+        glDepthFunc(GL_LESS);
+        glDepthMask(GL_TRUE);
+        glDisable(GL_BLEND);
+        glEnable(GL_CULL_FACE);
+        glCullFace(GL_BACK);
 
         if (alpha < 1.0f) {
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             glDepthMask(GL_FALSE);
-        } else {
-            glDisable(GL_BLEND);
-            glDepthMask(GL_TRUE);
         }
-        glEnable(GL_CULL_FACE);
-        glCullFace(GL_BACK);
 
         setMat4(shaderProgram, "model",       modelMatrix);
         setMat4(shaderProgram, "view",        view);
@@ -175,6 +176,7 @@ void main() {}
         set1f (shaderProgram, "roughness",   roughness);
         set1f (shaderProgram, "metallic",    metallic);
         set1f (shaderProgram, "timeOfDay",   timeOfDay);
+        set1i(shaderProgram, "isSelected", isSelected ? 1 : 0);
 
         glm::mat3 nm = glm::mat3(glm::transpose(glm::inverse(modelMatrix)));
         setMat3(shaderProgram, "normalMatrix", nm);
@@ -189,35 +191,53 @@ void main() {}
             set1i(shaderProgram, "hasShadowMap", 0);
         }
 
-        bool      hasDirLight = false;
-        int       numPoint    = 0, numSpot = 0;
-        bool      hasSurface  = false;
+        bool      hasSunLight  = false;
+        bool      hasMoonLight  = false;
+        int       numPoint      = 0, numSpot = 0;
+        bool      hasSurface    = false;
         glm::vec3 surfCol(1.f);
-        float     surfInt = 0.f;    
-        
+        float     surfInt = 0.f;
 
         for (const auto& node : lights) {
-            glm::vec3 activeLightColor = node.light.color;
-            float activeIntensity = node.light.intensity;
-            glm::vec3 activeLightDir = node.light.direction;
-
-            if (node.isLightingNode && node.light.direction.y > 0.0f) {
-                activeLightColor = glm::vec3(0.2f, 0.3f, 0.5f);
-                activeIntensity = 0.5f;
-                activeLightDir = -node.light.direction;
-            }
-
-            set3f(shaderProgram, "dirLightColor", activeLightColor);
-            set1f(shaderProgram, "dirLightIntensity", activeIntensity);
-
-
             switch (node.type) {
             case NodeType::DirectionalLight:
-                if (!hasDirLight) {
-                    hasDirLight = true;
-                    set3f(shaderProgram, "dirLightDir",       node.light.direction);
-                    set3f(shaderProgram, "dirLightColor",     node.light.color);
-                    set1f(shaderProgram, "dirLightIntensity", node.light.intensity);
+                if (node.isLightingNode) {
+                    float tod = node.light.timeOfDay;
+                    const float kDawn = 6.f, kDusk = 18.f, kBlend = 1.f;
+                    float nightT = 0.f;
+                    if (tod >= kDusk + kBlend || tod <= kDawn - kBlend) {
+                        nightT = 1.f;
+                    } else if (tod > kDusk - kBlend && tod < kDusk + kBlend) {
+                        nightT = (tod - (kDusk - kBlend)) / (2.f * kBlend);
+                    } else if (tod > kDawn - kBlend && tod < kDawn + kBlend) {
+                        nightT = 1.f - (tod - (kDawn - kBlend)) / (2.f * kBlend);
+                    } else {
+                        nightT = 0.f;
+                    }
+
+                    float sunWeight  = 1.f - nightT;
+                    float moonWeight = nightT;
+
+                    if (sunWeight > 0.f && !hasSunLight) {
+                        hasSunLight = true;
+                        set3f(shaderProgram, "sunLightDir",       node.light.direction);
+                        set3f(shaderProgram, "sunLightColor",     node.light.color);
+                        set1f(shaderProgram, "sunLightIntensity", node.light.intensity * sunWeight);
+                    }
+                    if (moonWeight > 0.f && !hasMoonLight) {
+                        hasMoonLight = true;
+                        glm::vec3 moonDir = -node.light.direction;
+                        set3f(shaderProgram, "moonLightDir",       moonDir);
+                        set3f(shaderProgram, "moonLightColor",     node.light.moonColor);
+                        set1f(shaderProgram, "moonLightIntensity", node.light.moonIntensity * moonWeight);
+                    }
+                } else {
+                    if (!hasSunLight) {
+                        hasSunLight = true;
+                        set3f(shaderProgram, "sunLightDir",       node.light.direction);
+                        set3f(shaderProgram, "sunLightColor",     node.light.color);
+                        set1f(shaderProgram, "sunLightIntensity", node.light.intensity);
+                    }
                 }
                 break;
             case NodeType::PointLight:
@@ -254,7 +274,8 @@ void main() {}
             }
         }
 
-        set1i(shaderProgram, "hasDirLight",      hasDirLight ? 1 : 0);
+        set1i(shaderProgram, "hasSunLight",      hasSunLight  ? 1 : 0);
+        set1i(shaderProgram, "hasMoonLight",     hasMoonLight ? 1 : 0);
         set1i(shaderProgram, "numPointLights",   numPoint);
         set1i(shaderProgram, "numSpotLights",    numSpot);
         set1i(shaderProgram, "hasSurface",       hasSurface ? 1 : 0);
@@ -262,26 +283,27 @@ void main() {}
         set1f(shaderProgram, "surfaceIntensity", surfInt);
 
         for (auto& mesh : model.meshes) {
-            unsigned int texID = (overrideTexID != 0) ? overrideTexID : mesh.textureID;
-            bool useTex = (texID != 0);
+            bool useTex = (overrideTexID != 0);
             set1i(shaderProgram, "hasTexture", useTex ? 1 : 0);
             if (useTex) {
                 glActiveTexture(GL_TEXTURE0);
-                glBindTexture(GL_TEXTURE_2D, texID);
+                glBindTexture(GL_TEXTURE_2D, overrideTexID);
                 set1i(shaderProgram, "albedoMap", 0);
+            } else {
+                glm::vec3 col;
+                if (baseColor.r >= 0.f)          col = baseColor;
+                else if (mesh.hasMtlColor)        col = mesh.matColor;
+                else                              col = glm::vec3(0.8f);
+                set3f(shaderProgram, "matColor", col);
             }
-            set3f(shaderProgram, "matColor",
-                  mesh.hasMtlColor ? mesh.matColor : glm::vec3(0.8f, 0.4f, 0.1f));
 
             glBindVertexArray(mesh.VAO);
             glDrawElements(GL_TRIANGLES, mesh.indexCount, GL_UNSIGNED_INT, nullptr);
             glBindVertexArray(0);
         }
 
-        if (alpha < 1.0f) {
-            glDepthMask(GL_TRUE);
-            glDisable(GL_BLEND);
-        }
+        glDepthMask(GL_TRUE);
+        glDisable(GL_BLEND);
     }
 
     void Renderer3D::InitSkybox()

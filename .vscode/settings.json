@@ -11,5 +11,6 @@
         "--header-insertion=never",
         "--fallback-style=Microsoft"
     ],
-    "C_Cpp.intelliSenseEngine": "disabled"
+    "C_Cpp.intelliSenseEngine": "disabled",
+    "cmake.buildType": "Release",
 }

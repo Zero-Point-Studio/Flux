@@ -1,6 +1,11 @@
 ﻿cmake_minimum_required(VERSION 3.20)
 project(FluxEngine LANGUAGES C CXX)
 
+set(RESOURCES "")
+if (WIN32)
+    set(RESOURCES "resource.rc")
+endif()
+
 add_executable(Flux
         "main.cpp"
         "engine/Window.cpp"

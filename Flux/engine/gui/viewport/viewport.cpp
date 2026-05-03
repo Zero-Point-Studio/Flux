@@ -70,7 +70,7 @@ void Viewport::HandleObjectSelection(ImVec2 mousePos, ImVec2 sz,
     int   best     = -1;
     float bestDist = 999999.f;
     for (int i = 0; i < (int)heiarchy.nodes.size(); i++) {
-        if (heiarchy.nodes[i].isLightingNode) continue;
+        if (heiarchy.nodes[i].isLightingNode || heiarchy.nodes[i].isLocked) continue;
         float r = glm::length(heiarchy.nodes[i].scale) * 0.75f;
         if (r < 0.3f) r = 0.3f;
         if (CheckSphereHit(ro, rayWorld, heiarchy.nodes[i].position, r)) {
@@ -234,18 +234,21 @@ void Viewport::RenderViewport(Heiarchy& heiarchy)
     bool      hasLightingNode = false;
     SceneNode* ln             = heiarchy.GetLightingNode();
     if (ln) {
-        const float kDawn = 6.0f, kDusk = 18.0f, kBlend = 0.5f;
+        const float kDawn = 6.0f, kDusk = 18.0f, kBlend = 1.0f;
         float tod = ln->light.timeOfDay;
         float nightT = 0.0f;
-        if (tod >= kDusk + kBlend || tod <= kDawn - kBlend)
+        if (tod >= kDusk + kBlend || tod <= kDawn - kBlend) {
             nightT = 1.0f;
-        else if (tod >= kDusk - kBlend && tod <= kDusk + kBlend)
+        } else if (tod > kDusk - kBlend && tod < kDusk + kBlend) {
             nightT = (tod - (kDusk - kBlend)) / (2.0f * kBlend);
-        else if (tod >= kDawn - kBlend && tod <= kDawn + kBlend)
+        } else if (tod > kDawn - kBlend && tod < kDawn + kBlend) {
             nightT = 1.0f - (tod - (kDawn - kBlend)) / (2.0f * kBlend);
+        } else {
+            nightT = 0.0f;
+        }
 
         glm::vec3 moonDir = -ln->light.direction;
-        sunDir = glm::normalize(glm::mix(ln->light.direction, moonDir, nightT));
+        sunDir = ln->light.direction;
         timeOfDay       = ln->light.timeOfDay;
         hasLightingNode = true;
     }
@@ -268,7 +271,8 @@ void Viewport::RenderViewport(Heiarchy& heiarchy)
                             1.0f,
                             node.roughness,
                             node.metallic,
-                            timeOfDay);
+                            timeOfDay,
+                            node.baseColor);
     }
 
     if (isDraggingModel && ghostModel) {

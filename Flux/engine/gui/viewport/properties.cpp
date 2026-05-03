@@ -178,7 +178,7 @@ void Properties::renderProperties(Heiarchy* h) {
             char  disp[16]; snprintf(disp, sizeof(disp), "%02d:%02d", h24, m60);
             ImGui::PushID("tod");
            if (ImGui::DragFloat("##tod", &node.light.timeOfDay, 0.01f, 0.f, 24.f, disp)) {
-                float angle = ((node.light.timeOfDay / 24.0f) * 360.0f) - 90.0f; 
+                float angle = (node.light.timeOfDay - 12.0f) * 15.0f; 
                 node.rotation.x = angle;
                 
                 glm::quat q = glm::angleAxis(glm::radians(node.rotation.y), glm::vec3(0,1,0))
@@ -190,6 +190,8 @@ void Properties::renderProperties(Heiarchy* h) {
 
         FloatRow("Brightness",      node.light.brightness,     0.01f, 0.f, 10.f);
         ColorRow("Color",           node.light.color);
+        ColorRow("Moon Color",      node.light.moonColor);
+        FloatRow("Moon Intensity",  node.light.moonIntensity, 0.01f, 0.f, 100.f);
         ColorRow("ColorShift",      node.light.colorShift);
         FloatRow("Ambient Day",     node.light.ambientDaytime, 0.005f, 0.f, 1.f);
         FloatRow("Ambient Night",   node.light.ambientNight,   0.005f, 0.f, 1.f);

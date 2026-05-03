@@ -1,6 +1,3 @@
- 
-
-
 #include "Window.h"
 #include <iostream>
 
@@ -37,6 +34,13 @@ namespace Flux
         HWND hwnd = glfwGetWin32Window(m_window);
         BOOL useDarkMode = TRUE;
         DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &useDarkMode, sizeof(useDarkMode));
+
+        HICON hIcon = LoadIcon(GetModuleHandle(NULL), "IDI_ICON1");
+
+    if (hIcon) {
+        SendMessage(hwnd, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
+        SendMessage(hwnd, WM_SETICON, ICON_SMALL, (LPARAM)hIcon);
+    }
 #endif
 
         if (!m_window)

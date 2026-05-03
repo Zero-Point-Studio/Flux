@@ -41,6 +41,9 @@ namespace Flux {
         float fogStart        = 0.0f;
         float fogEnd          = 300.0f;
         glm::vec3 colorShift  = glm::vec3(1.0f);
+
+        glm::vec3 moonColor     = glm::vec3(0.55f, 0.65f, 0.85f);
+        float     moonIntensity = 0.18f;
     };
 
     struct SceneNode {
@@ -64,6 +67,7 @@ namespace Flux {
         LightData light;
 
         bool isLightingNode = false;
+        bool isLocked = false;
 
         glm::mat4 GetTransformMatrix() const {
             float m[16];

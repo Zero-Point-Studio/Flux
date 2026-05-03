@@ -50,6 +50,8 @@ void Heiarchy::setup() {
     lighting.light.direction  = glm::normalize(q * glm::vec3(0.f, -1.f, 0.f));
     lighting.light.color      = glm::vec3(1.0f, 0.97f, 0.88f);
     lighting.light.intensity  = 3.5f;
+    lighting.light.moonColor     = glm::vec3(0.5f, 0.6f, 0.9f);
+    lighting.light.moonIntensity = 1.0f;
     lighting.light.timeOfDay  = 14.0f;
     lighting.light.brightness = 2.0f;
 

@@ -8,8 +8,11 @@ in vec4 FragPosLightSpace;
 in mat3 TBN;
 
 uniform bool      hasTexture;
+uniform bool      isSelected;
 uniform sampler2D albedoMap;
 uniform vec3      matColor;
+uniform vec3      nodeBaseColor;
+uniform bool      useNodeColor;
 uniform float     roughness;
 uniform float     metallic;
 uniform float     alpha;
@@ -19,10 +22,15 @@ uniform vec3 viewPos;
 uniform sampler2D shadowMap;
 uniform bool      hasShadowMap;
 
-uniform bool  hasDirLight;
-uniform vec3  dirLightDir;
-uniform vec3  dirLightColor;
-uniform float dirLightIntensity;
+uniform bool  hasSunLight;
+uniform vec3  sunLightDir;
+uniform vec3  sunLightColor;
+uniform float sunLightIntensity;
+
+uniform bool  hasMoonLight;
+uniform vec3  moonLightDir;
+uniform vec3  moonLightColor;
+uniform float moonLightIntensity;
 uniform float timeOfDay;
 
 #define MAX_POINT 8
@@ -90,18 +98,18 @@ float ShadowFactor(vec4 fragPosLS, vec3 N, vec3 L) {
     if (proj.z > 1.0) return 1.0;
 
     float cosTheta = clamp(dot(N, L), 0.0, 1.0);
-    float bias = mix(0.003, 0.0005, cosTheta);
+    float bias = mix(0.001, 0.0002, cosTheta);
 
     vec2 ts = 1.0 / vec2(textureSize(shadowMap, 0));
 
     float shadow = 0.0;
-    for (int x = -2; x <= 2; ++x) {
-        for (int y = -2; y <= 2; ++y) {
+    for (int x = -1; x <= 1; ++x) {
+        for (int y = -1; y <= 1; ++y) {
             float closest = texture(shadowMap, proj.xy + vec2(x, y) * ts).r;
             shadow += (proj.z - bias > closest) ? 0.0 : 1.0;
         }
     }
-    return shadow / 25.0;
+    return shadow / 9.0;
 }
 
 vec3 PBRContrib(vec3 N, vec3 V, vec3 L, vec3 lightColor,
@@ -124,8 +132,11 @@ vec3 PBRContrib(vec3 N, vec3 V, vec3 L, vec3 lightColor,
 }
 
 void main() {
-    vec3 albedo = hasTexture ? pow(texture(albedoMap, TexCoords).rgb, vec3(2.2))
-                             : pow(matColor, vec3(2.2));
+    vec3 baseCol = useNodeColor ? nodeBaseColor
+                                : (hasTexture ? vec3(1.0) : matColor);
+    vec3 albedo  = hasTexture
+                   ? pow(texture(albedoMap, TexCoords).rgb, vec3(2.2)) * baseCol
+                   : pow(baseCol, vec3(2.2));
 
     vec3 N  = normalize(Normal);
     vec3 V  = normalize(viewPos - FragPos);
@@ -133,9 +144,9 @@ void main() {
     vec3 F0 = mix(vec3(0.04), albedo, metallic);
 
     float tod = timeOfDay;
-    float dayT = clamp(sin((tod / 24.0) * PI * 2.0 - PI * 0.5) * 0.5 + 0.5, 0.0, 1.0);
+    float dayT = clamp(sin(((tod - 6.0) / 24.0) * PI * 2.0 - PI * 0.5) * 0.5 + 0.5, 0.0, 1.0);
     vec3 ambientColor = mix(vec3(0.02, 0.03, 0.08),
-                            vec3(0.10, 0.12, 0.18),
+                            vec3(0.30, 0.32, 0.38),
                             dayT);
     float dawnDusk = (1.0 - abs(dayT * 2.0 - 1.0));
     ambientColor += dawnDusk * vec3(0.06, 0.03, 0.0);
@@ -145,13 +156,19 @@ void main() {
 
     vec3 Lo = vec3(0.0);
 
-    if (hasDirLight) {
-        vec3 L = normalize(-dirLightDir);
+    if (hasSunLight) {
+        vec3  L      = normalize(-sunLightDir);
         float shadow = ShadowFactor(FragPosLightSpace, N, L);
-        vec3 contrib = PBRContrib(N, V, L,
-                                  dirLightColor * dirLightIntensity,
-                                  1.0, albedo, F0, roughness, metallic);
-        Lo += contrib * shadow;
+        Lo += PBRContrib(N, V, L,
+                         sunLightColor * sunLightIntensity,
+                         1.0, albedo, F0, roughness, metallic) * shadow;
+    }
+
+    if (hasMoonLight) {
+        vec3 L = normalize(-moonLightDir);
+        Lo += PBRContrib(N, V, L,
+                         moonLightColor * moonLightIntensity,
+                         1.0, albedo, F0, roughness, metallic);
     }
 
     for (int i = 0; i < numPointLights; i++) {
@@ -193,9 +210,13 @@ void main() {
 
     vec3 color = ambient + Lo;
 
-    color = (color * (2.51 * color + 0.03)) / (color * (2.43 * color + 0.59) + 0.14);
-    color = clamp(color, 0.0, 1.0);
+    color = clamp((color * (2.51 * color + 0.03)) /
+                  (color * (2.43 * color + 0.59) + 0.14), 0.0, 1.0);
     color = pow(color, vec3(1.0 / 2.2));
+
+    if (isSelected) {
+        color += vec3(0.2, 0.2, 0.0); 
+    }
 
     FragColor = vec4(color, alpha);
 }

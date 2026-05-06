@@ -16,6 +16,7 @@
 #include "./gui/viewport/output.h"
 #include "./gui/viewport/properties.h"
 #include "./gui/viewport/heiarchy.h"
+#include "./gui/texteditor.h"
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
@@ -44,5 +45,6 @@ namespace Flux {
 		Output m_output;
 		Properties m_properties;
 		Heiarchy m_heiarchy;
+		TextEditor m_texteditor;
 	};
 }

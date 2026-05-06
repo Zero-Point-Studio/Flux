@@ -2,10 +2,12 @@
 
 #include "imgui.h"
 #include "viewport.h"
+#include "../texteditor.h"
 #include <filesystem>
 #include <fstream>
 #include <vector>
 #include <string>
+#include "../lib/portable-file-dialogs.h"
 
 namespace Flux {
 	enum class fileType { Folder, Script, Text, Model, Texture };
@@ -26,6 +28,7 @@ namespace Flux {
 	};
 
 	class Viewport;
+	class TextEditor;
 
 	class Explorer {
 	public:
@@ -37,6 +40,12 @@ namespace Flux {
 		virtualFile projectRoot = { "Project", fileType::Folder };
 		creationTask pendingCreationTask;
 		std::filesystem::path pathToDelete = "";
+
+		std::vector<std::filesystem::path> filesWithBackups;
+
+		void scanForBackups();
+
+		TextEditor* textEditor;
 
 	private:
 		void DrawVirtualNodes(virtualFile& file);
@@ -56,6 +65,7 @@ namespace Flux {
 		char         renameBuffer[256] = {};
 
 		bool showNewProjectModal     = false;
+		bool showOpenProjectModal    = false;
 		char newProjectNameBuf[256]  = "NewGame";
 		std::filesystem::path pendingTemplateRoot;
 		std::filesystem::file_time_type lastFolderTime;

@@ -2,7 +2,7 @@
 
 local Message = "Hello World!"
 
-local function OnStart()
+local function onStart()
     print(Message)
 end
 

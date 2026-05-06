@@ -33,6 +33,8 @@ add_executable(Flux
         engine/utils/pathHelper.h
         engine/utils/pathHelper.cpp
         engine/utils/pathHelper.cpp
+        engine/gui/texteditor.h
+        engine/gui/texteditor.cpp
 )
 
 if (NOT WIN32)
@@ -52,10 +54,12 @@ if (NOT WIN32)
 endif ()
 
 if (WIN32)
-    set_target_properties(Flux PROPERTIES
-            LINK_FLAGS "/SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup"
+    target_link_options(Flux PRIVATE 
+        "$<$<CONFIG:Debug>:/SUBSYSTEM:CONSOLE>"
+        "$<$<CONFIG:Release>:/SUBSYSTEM:WINDOWS>"
+        "/ENTRY:mainCRTStartup"
     )
-endif ()
+endif()
 
 find_package(OpenGL REQUIRED)
 find_package(glm CONFIG REQUIRED)
@@ -75,6 +79,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/assets" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
 file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/assets/models" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
+file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/assets/fonts" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
 file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/assets/icons" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
 file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/templates" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
 file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/templates/Project_Templates" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
@@ -112,7 +117,11 @@ if (WIN32)
             opengl32
             dwmapi
     )
-    set_target_properties(Flux PROPERTIES LINK_FLAGS "/SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup")
+    target_link_options(Flux PRIVATE 
+        "$<$<CONFIG:Debug>:/SUBSYSTEM:CONSOLE>"
+        "$<$<CONFIG:Release>:/SUBSYSTEM:WINDOWS>"
+        "/ENTRY:mainCRTStartup"
+    )
 else ()
     target_link_libraries(Flux PRIVATE
             glfw
@@ -137,6 +146,8 @@ if (NOT WIN32)
             "${CMAKE_CURRENT_SOURCE_DIR}/lib/stb"
     )
 endif ()
+
+
 
 if (MSVC)
     target_compile_options(Flux PRIVATE $<$<CONFIG:Release>:/O2 /GL>)

@@ -64,12 +64,19 @@ namespace Flux
             stbi_image_free(images[0].pixels);
         }
 
+        m_explorer.textEditor = &m_texteditor;
+
         m_viewport.Init();
         m_heiarchy.setup();
 
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
         ImGuiIO& io = ImGui::GetIO();
+
+        io.Fonts->AddFontDefault();
+
+        m_texteditor.SetupFont();
+
         (void)io;
 
         io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
@@ -146,6 +153,7 @@ namespace Flux
                                                               &dock_id_right);
 
             ImGui::DockBuilderDockWindow("Viewport", dock_id_center);
+            ImGui::DockBuilderDockWindow("###UniqueEditorID", dock_id_center);
             ImGui::DockBuilderDockWindow("Explorer", dock_id_right);
             ImGui::DockBuilderDockWindow("Output", dock_id_bottom);
             ImGui::DockBuilderDockWindow("Properties", dock_id_bottomRight);
@@ -155,13 +163,14 @@ namespace Flux
             ImGui::DockBuilderFinish(dockspace_id);
         }
         ImGui::End();
-
+        
         m_viewport.RenderViewport(m_heiarchy);
         m_explorer.renderExplorer(m_viewport);
         m_ribbon.renderRibbon();
         m_output.renderOutput();
         m_properties.renderProperties(&m_heiarchy);
         m_heiarchy.renderHeiarchy(m_viewport.activeProjectPath);
+        m_texteditor.Render();
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

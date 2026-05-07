@@ -2,7 +2,8 @@
 #include <string>
 #include <vector>
 
-
+#include "luaEngine.h"
+#include "../texteditor.h"
 
 namespace Flux {
 	enum ToolMode {
@@ -11,9 +12,15 @@ namespace Flux {
 		TOOL_SCALE = 2
 	};
 
+	class LuaEngine;
+	class TextEditor;
+
 	class Ribbon {
 		public:
 			void renderRibbon();
+
+			LuaEngine* luaEnginePtr = nullptr;
+			TextEditor* textEditorPtr = nullptr;
 		private:
 			void drawFileMenu();
 			void drawEditMenu();

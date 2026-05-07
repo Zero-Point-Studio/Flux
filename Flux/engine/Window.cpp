@@ -66,8 +66,12 @@ namespace Flux
 
         m_explorer.textEditor = &m_texteditor;
 
+        m_ribbon.luaEnginePtr = &m_luaEngine;
+        m_ribbon.textEditorPtr = &m_texteditor;
+
         m_viewport.Init();
         m_heiarchy.setup();
+        m_luaEngine.init();
 
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
@@ -163,6 +167,10 @@ namespace Flux
             ImGui::DockBuilderFinish(dockspace_id);
         }
         ImGui::End();
+
+        if (m_luaEngine.isRunning) {
+            m_luaEngine.step();
+        }
         
         m_viewport.RenderViewport(m_heiarchy);
         m_explorer.renderExplorer(m_viewport);

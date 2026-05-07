@@ -35,6 +35,8 @@ add_executable(Flux
         engine/utils/pathHelper.cpp
         engine/gui/texteditor.h
         engine/gui/texteditor.cpp
+        engine/luaEngine.h
+        engine/luaEngine.cpp
 )
 
 if (NOT WIN32)
@@ -64,6 +66,7 @@ endif()
 find_package(OpenGL REQUIRED)
 find_package(glm CONFIG REQUIRED)
 find_package(assimp REQUIRED)
+find_package(sol2 CONFIG REQUIRED)
 
 if (WIN32)
     find_package(glfw3 CONFIG REQUIRED)
@@ -92,6 +95,7 @@ file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/engine/gui/viewport" DESTINATION "${CMAKE
 file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/engine/mechanics" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
 file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/shaders" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
 file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/lib" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
+file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/lib/luajit/src" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
     set_property(TARGET Flux PROPERTY CXX_STANDARD 20)
@@ -105,7 +109,9 @@ set(CMAKE_AUTOUIC ON)
 target_link_libraries(Flux PRIVATE
         glm::glm
         assimp::assimp
+        sol2::sol2
         ${OPENGL_LIBRARIES}
+        "${CMAKE_CURRENT_SOURCE_DIR}/lib/luajit/src/lua51.lib"
 )
 
 if (WIN32)
@@ -135,6 +141,7 @@ target_include_directories(Flux PRIVATE
         "engine/gui/viewport"
         "assets"
         ${CMAKE_CURRENT_SOURCE_DIR}
+        "${CMAKE_CURRENT_SOURCE_DIR}/lib/luajit/src"
 )
 
 if (NOT WIN32)

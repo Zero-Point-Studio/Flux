@@ -69,8 +69,18 @@ namespace Flux {
 	}
 
 	void Ribbon::drawProjectControls() {
-		if (ImGui::Button("Play")) {}
-		ImGui::SameLine();
-		if (ImGui::Button("Pause")) {}
+		if (ImGui::Button(luaEnginePtr->isRunning ? "Stop" : "Play")) {
+			luaEnginePtr->isRunning = !luaEnginePtr->isRunning;
+
+			if (luaEnginePtr == nullptr || textEditorPtr == nullptr) return;
+
+			if (luaEnginePtr->isRunning) {
+				luaEnginePtr->isRunning = true;
+
+				luaEnginePtr->runScript(textEditorPtr->getText());
+			} else {
+				luaEnginePtr->stop();
+			}
+		}
 	}
 }

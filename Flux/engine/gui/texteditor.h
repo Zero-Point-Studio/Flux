@@ -18,6 +18,8 @@ namespace Flux {
             std::string scriptName;
             std::string originalContent;
 
+            std::string getText() {return std::string(textBuf);}
+
             bool isVisible = false;
             bool isUnsaved = false;
 

@@ -17,6 +17,7 @@
 #include "./gui/viewport/properties.h"
 #include "./gui/viewport/heiarchy.h"
 #include "./gui/texteditor.h"
+#include "luaEngine.h"
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
@@ -46,5 +47,6 @@ namespace Flux {
 		Properties m_properties;
 		Heiarchy m_heiarchy;
 		TextEditor m_texteditor;
+		LuaEngine m_luaEngine;
 	};
 }

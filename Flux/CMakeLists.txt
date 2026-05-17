@@ -1,5 +1,13 @@
-﻿cmake_minimum_required(VERSION 3.20)
+﻿cmake_minimum_required(VERSION 3.10)
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    set(VCPKG_TARGET_TRIPLET "x64-windows-llvm" CACHE STRING "")
+endif()
 project(FluxEngine LANGUAGES C CXX)
+
+set(RESOURCES "")
+if (WIN32)
+    set(RESOURCES "resource.rc")
+endif()
 
 add_executable(Flux
         "main.cpp"
@@ -28,6 +36,13 @@ add_executable(Flux
         engine/utils/pathHelper.h
         engine/utils/pathHelper.cpp
         engine/utils/pathHelper.cpp
+        engine/gui/texteditor.h
+        engine/gui/texteditor.cpp
+        engine/luaEngine.h
+        engine/luaEngine.cpp
+        engine/runtime.h
+        engine/runtime.cpp
+        engine/mechanics/SplashScreen.h
 )
 
 if (NOT WIN32)
@@ -47,14 +62,18 @@ if (NOT WIN32)
 endif ()
 
 if (WIN32)
-    set_target_properties(Flux PROPERTIES
-            LINK_FLAGS "/SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup"
+    target_link_options(Flux PRIVATE 
+        "$<$<CONFIG:Debug>:/SUBSYSTEM:CONSOLE>"
+        "$<$<CONFIG:Release>:/SUBSYSTEM:WINDOWS>"
+        "/ENTRY:mainCRTStartup"
     )
-endif ()
+endif()
 
 find_package(OpenGL REQUIRED)
 find_package(glm CONFIG REQUIRED)
 find_package(assimp REQUIRED)
+find_package(sol2 CONFIG REQUIRED)
+find_package(SDL3 CONFIG REQUIRED)
 
 if (WIN32)
     find_package(glfw3 CONFIG REQUIRED)
@@ -70,6 +89,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/assets" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
 file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/assets/models" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
+file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/assets/fonts" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
 file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/assets/icons" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
 file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/templates" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
 file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/templates/Project_Templates" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
@@ -82,6 +102,7 @@ file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/engine/gui/viewport" DESTINATION "${CMAKE
 file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/engine/mechanics" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
 file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/shaders" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
 file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/lib" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
+file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/lib/luajit/src" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
     set_property(TARGET Flux PROPERTY CXX_STANDARD 20)
@@ -95,6 +116,8 @@ set(CMAKE_AUTOUIC ON)
 target_link_libraries(Flux PRIVATE
         glm::glm
         assimp::assimp
+        sol2::sol2
+        SDL3::SDL3
         ${OPENGL_LIBRARIES}
 )
 
@@ -106,8 +129,13 @@ if (WIN32)
             imguizmo::imguizmo
             opengl32
             dwmapi
+            "${CMAKE_CURRENT_SOURCE_DIR}/lib/luajit/src/lua51.lib"
     )
-    set_target_properties(Flux PROPERTIES LINK_FLAGS "/SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup")
+    target_link_options(Flux PRIVATE 
+        "$<$<CONFIG:Debug>:/SUBSYSTEM:CONSOLE>"
+        "$<$<CONFIG:Release>:/SUBSYSTEM:WINDOWS>"
+        "/ENTRY:mainCRTStartup"
+    )
 else ()
     target_link_libraries(Flux PRIVATE
             glfw
@@ -121,6 +149,8 @@ target_include_directories(Flux PRIVATE
         "engine/gui/viewport"
         "assets"
         ${CMAKE_CURRENT_SOURCE_DIR}
+        "${CMAKE_CURRENT_SOURCE_DIR}/lib/luajit/src"
+        "lib/luajit/src"
 )
 
 if (NOT WIN32)
@@ -132,6 +162,8 @@ if (NOT WIN32)
             "${CMAKE_CURRENT_SOURCE_DIR}/lib/stb"
     )
 endif ()
+
+
 
 if (MSVC)
     target_compile_options(Flux PRIVATE $<$<CONFIG:Release>:/O2 /GL>)

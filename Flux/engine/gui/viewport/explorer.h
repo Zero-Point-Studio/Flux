@@ -2,10 +2,19 @@
 
 #include "imgui.h"
 #include "viewport.h"
+#include "../texteditor.h"
 #include <filesystem>
 #include <fstream>
 #include <vector>
 #include <string>
+#include "../lib/portable-file-dialogs.h"
+
+#include "mechanics/SceneSerializer.h"
+
+#include "ribbon.h"
+#include "heiarchy.h"
+
+class TextEditor;
 
 namespace Flux {
 	enum class fileType { Folder, Script, Text, Model, Texture };
@@ -26,6 +35,9 @@ namespace Flux {
 	};
 
 	class Viewport;
+	class SceneSerializer;
+
+	class Ribbon;
 
 	class Explorer {
 	public:
@@ -37,6 +49,21 @@ namespace Flux {
 		virtualFile projectRoot = { "Project", fileType::Folder };
 		creationTask pendingCreationTask;
 		std::filesystem::path pathToDelete = "";
+
+		std::vector<std::filesystem::path> filesWithBackups;
+
+		void scanForBackups();
+
+		::TextEditor* textEditor = nullptr;
+
+		Heiarchy h;
+
+		Ribbon* ribbonPtr = nullptr;
+
+		std::filesystem::path activeFilePath;
+		std::string activeScriptName;
+		bool isEditorVisible = false;
+		bool isEditorUnsaved = false;
 
 	private:
 		void DrawVirtualNodes(virtualFile& file);
@@ -56,6 +83,7 @@ namespace Flux {
 		char         renameBuffer[256] = {};
 
 		bool showNewProjectModal     = false;
+		bool showOpenProjectModal    = false;
 		char newProjectNameBuf[256]  = "NewGame";
 		std::filesystem::path pendingTemplateRoot;
 		std::filesystem::file_time_type lastFolderTime;

@@ -4,6 +4,8 @@
 #include <vector>
 #include "Model.h"
 #include "./mechanics/Scenenode.h"
+#include <SDL3/SDL.h>
+#include "gui/viewport/output.h"
 
 namespace Flux {
 
@@ -21,7 +23,8 @@ namespace Flux {
                        float alpha       = 1.0f,
                        float roughness   = 0.7f,
                        float metallic    = 0.0f,
-                       float timeOfDay   = 14.0f);
+                       float timeOfDay   = 14.0f,
+                       glm::vec3 baseColor = glm::vec3(-1.f)); // -1 = use mesh mtl
 
         void DrawBillboard(unsigned int texID, glm::vec3 worldPos, float size,
                            glm::mat4 view, glm::mat4 proj);
@@ -34,6 +37,8 @@ namespace Flux {
                         glm::vec3 sunDir,
                         float timeOfDay      = 14.0f,
                         bool  hasLightingNode = true);
+
+        bool isSelected;
 
     private:
         unsigned int shaderProgram    = 0;

@@ -1,3 +1,4 @@
+#define NOMINMAX
 #pragma once
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -20,16 +21,23 @@
 #include "heiarchy.h"
 #include "Textureloader.h"
 
+#include "ribbon.h"
+
 namespace Flux {
 
     extern bool showSettings;
     class OpenGLManager;
     class Renderer3D;
+    class Ribbon;
 
     class Viewport {
     public:
         void Init();
         void RenderViewport(Heiarchy& heiarchy);
+
+        Ribbon* ribbonPtr = nullptr;
+
+        std::unique_ptr<Camera> camera;
 
         std::filesystem::path activeProjectPath;
         bool showGrid     = true;
@@ -38,7 +46,6 @@ namespace Flux {
     private:
         std::unique_ptr<OpenGLManager> glManager;
         std::unique_ptr<Renderer3D>    renderer;
-        std::unique_ptr<Camera>        camera;
 
         std::shared_ptr<Model> ghostModel;
         std::string            ghostPath;
